@@ -21,6 +21,7 @@ export const INITIAL_BRANDS: Brand[] = [
     noticeDate: null,
     contactPerson: 'Aditi Sharma',
     contactEmail: 'aditi@kalakriti.in',
+    contactPhone: '+919845012345',
     gstin: '29ABCDE1234F1Z5',
   },
   {
@@ -43,6 +44,7 @@ export const INITIAL_BRANDS: Brand[] = [
     noticeDate: null,
     contactPerson: 'Dr. Nikhil Rao',
     contactEmail: 'nikhil@vedaearth.co',
+    contactPhone: '+919886023456',
     gstin: '29FGHIJ5678K2Z3',
   },
   {
@@ -65,6 +67,7 @@ export const INITIAL_BRANDS: Brand[] = [
     noticeDate: null,
     contactPerson: 'Meera Nambiar',
     contactEmail: 'meera@urbankhadi.com',
+    contactPhone: '+919845534567',
     gstin: '29KLMNO9012P3Z7',
   },
   {
@@ -87,6 +90,7 @@ export const INITIAL_BRANDS: Brand[] = [
     noticeDate: null,
     contactPerson: 'Clyde D’Souza',
     contactEmail: 'clyde@goaroastery.in',
+    contactPhone: '+919823045678',
     gstin: '30QRSTU3456V4Z9',
   },
   {
@@ -109,6 +113,7 @@ export const INITIAL_BRANDS: Brand[] = [
     noticeDate: '2026-11-03',
     contactPerson: 'Saurabh Jain',
     contactEmail: 'saurabh@mittisoul.in',
+    contactPhone: '+919741056789',
     gstin: '29WXYZ7890A5Z1',
   },
   {
@@ -131,6 +136,7 @@ export const INITIAL_BRANDS: Brand[] = [
     noticeDate: null,
     contactPerson: 'Ritu Varma',
     contactEmail: 'ritu@neevliving.com',
+    contactPhone: '+919811067890',
     gstin: '29BCDEF4321G6Z8',
   },
   {
@@ -153,6 +159,7 @@ export const INITIAL_BRANDS: Brand[] = [
     noticeDate: '2026-11-01',
     contactPerson: 'Kabir Sen',
     contactEmail: 'kabir@chaicollective.in',
+    contactPhone: '+919830078901',
     gstin: '29GHIJK8765L7Z2',
   },
 ];

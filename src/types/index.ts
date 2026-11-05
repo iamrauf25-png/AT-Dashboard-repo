@@ -20,6 +20,7 @@ export interface Brand {
   agreementEndDate?: string;
   contactPerson: string;
   contactEmail: string;
+  contactPhone?: string;
   gstin: string;
 }
 

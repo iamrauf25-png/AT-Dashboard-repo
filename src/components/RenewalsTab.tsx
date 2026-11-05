@@ -16,10 +16,16 @@ import {
   ArrowDown,
   TrendingUp,
   RotateCcw,
+  FileSpreadsheet,
+  Download,
+  MessageCircle,
 } from 'lucide-react';
 import { Brand } from '../types/index';
 import { formatINR, calculateTotalPenalty, getContractExpiryInfo } from '../utils/billing';
 import { SortField, SortDirection, sortBrands, getBrandGMV } from '../utils/sorting';
+import { generateBrandsCSV, downloadCSV } from '../utils/csvExport';
+import { WhatsAppModal } from './WhatsAppModal';
+import { getBrandWhatsAppUrl } from '../utils/whatsapp';
 
 interface RenewalsTabProps {
   brands: Brand[];
@@ -30,6 +36,7 @@ interface RenewalsTabProps {
   onOpenVacateModal: (brand: Brand) => void;
   onOpenInvoiceModal: (brand: Brand) => void;
   onSendRenewalReminders?: (brandNames: string[]) => void;
+  onTriggerNotification?: (text: string, type?: 'info' | 'success' | 'warning') => void;
 }
 
 export const RenewalsTab: React.FC<RenewalsTabProps> = ({
@@ -41,12 +48,14 @@ export const RenewalsTab: React.FC<RenewalsTabProps> = ({
   onOpenVacateModal,
   onOpenInvoiceModal,
   onSendRenewalReminders,
+  onTriggerNotification,
 }) => {
   // Reference date matching system local date (November 5, 2026)
   const referenceDate = useMemo(() => new Date('2026-11-05T00:00:00'), []);
   const [filterMode, setFilterMode] = useState<'all' | 'expiring' | 'overdue' | 'active'>('all');
   const [sortField, setSortField] = useState<SortField>('default');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [whatsAppBrand, setWhatsAppBrand] = useState<Brand | null>(null);
 
   // Brands with less than 7 days remaining in their current agreement cycle
   const expiringSoonBrands = useMemo(() => {
@@ -106,6 +115,19 @@ export const RenewalsTab: React.FC<RenewalsTabProps> = ({
     const names = expiringSoonBrands.map((b) => b.name);
     if (onSendRenewalReminders) {
       onSendRenewalReminders(names);
+    }
+  };
+
+  const handleExportCSV = () => {
+    const timestamp = new Date().toISOString().split('T')[0];
+    const filename = `AltTribe_Brands_Ledger_${timestamp}.csv`;
+    const csv = generateBrandsCSV(displayedBrands, referenceDate);
+    downloadCSV(csv, filename);
+    if (onTriggerNotification) {
+      onTriggerNotification(
+        `Exported ${displayedBrands.length} brands to ${filename}`,
+        'success'
+      );
     }
   };
 
@@ -234,6 +256,21 @@ export const RenewalsTab: React.FC<RenewalsTabProps> = ({
           >
             Overdue ({overdueBrands.length})
           </button>
+
+          <div className="h-4 w-px bg-pink-200 hidden sm:block mx-1"></div>
+
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            type="button"
+            onClick={handleExportCSV}
+            className="px-3 py-1 bg-white hover:bg-pink-50 text-pink-800 font-bold border border-pink-200 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs shrink-0"
+            title="Download current brands list as CSV file for spreadsheet reporting"
+            aria-label="Export brands list as CSV"
+          >
+            <FileSpreadsheet className="w-3.5 h-3.5 text-pink-600 shrink-0" />
+            <span>Export CSV</span>
+          </motion.button>
         </div>
       </div>
 
@@ -361,7 +398,7 @@ export const RenewalsTab: React.FC<RenewalsTabProps> = ({
               Live agreement cycles, 7-day contract expiry flags, and penalty audits
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             {filterMode === 'expiring' && (
               <span className="text-xs text-rose-800 font-bold bg-rose-50 px-2.5 py-1 rounded-lg border border-rose-200 flex items-center gap-1 shrink-0">
                 <Flame className="w-3.5 h-3.5 text-rose-600 animate-pulse shrink-0" />
@@ -371,6 +408,18 @@ export const RenewalsTab: React.FC<RenewalsTabProps> = ({
             <span className="text-xs text-pink-700 font-semibold bg-pink-50 px-3 py-1 rounded-full border border-pink-200 shrink-0">
               Showing {displayedBrands.length} of {brands.length} Brands
             </span>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              type="button"
+              onClick={handleExportCSV}
+              className="flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white rounded-full font-bold text-xs shadow-xs shadow-pink-200 transition-all cursor-pointer shrink-0"
+              title="Download current brands list as a CSV file for manual reporting"
+              aria-label="Download Brands CSV"
+            >
+              <Download className="w-3.5 h-3.5 shrink-0" />
+              <span>Download CSV</span>
+            </motion.button>
           </div>
         </div>
 
@@ -672,6 +721,19 @@ export const RenewalsTab: React.FC<RenewalsTabProps> = ({
                             <FileText className="w-3 h-3 text-pink-600 shrink-0" />
                             <span>Zoho Invoice</span>
                           </motion.button>
+
+                          {/* WhatsApp Contract Status Button */}
+                          <motion.button
+                            whileHover={{ scale: 1.03 }}
+                            whileTap={{ scale: 0.97 }}
+                            onClick={() => setWhatsAppBrand(b)}
+                            aria-label={`Send WhatsApp contract update to ${b.name} founder`}
+                            className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-lg text-xs flex items-center gap-1 transition-colors cursor-pointer font-bold shadow-2xs shrink-0 group"
+                            title={`Open WhatsApp dispatch preview and pre-filled message for ${b.contactPerson || b.name}`}
+                          >
+                            <MessageCircle className="w-3 h-3 text-emerald-600 shrink-0 group-hover:scale-110 transition-transform" />
+                            <span>WhatsApp</span>
+                          </motion.button>
                         </div>
                       </td>
                     </tr>
@@ -682,6 +744,21 @@ export const RenewalsTab: React.FC<RenewalsTabProps> = ({
           </table>
         </div>
       </div>
+
+      {/* WhatsApp Pre-filled Dispatch Modal */}
+      <WhatsAppModal
+        brand={whatsAppBrand}
+        onClose={() => setWhatsAppBrand(null)}
+        referenceDate={referenceDate}
+        onCopied={() => {
+          if (onTriggerNotification) {
+            onTriggerNotification(
+              `WhatsApp message for ${whatsAppBrand?.name} copied to clipboard!`,
+              'info'
+            );
+          }
+        }}
+      />
     </motion.div>
   );
 };

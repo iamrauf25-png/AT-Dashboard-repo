@@ -38,7 +38,13 @@ function loadPersistedState() {
       const raw = fs.readFileSync(STORE_FILE, 'utf-8');
       const data = JSON.parse(raw);
       if (Array.isArray(data.brands) && data.brands.length > 0) {
-        brandsState = data.brands;
+        brandsState = data.brands.map((b: Brand) => {
+          const initMatch = INITIAL_BRANDS.find((ib) => ib.id === b.id);
+          return {
+            ...b,
+            contactPhone: b.contactPhone || initMatch?.contactPhone || '+91 98450 12345',
+          };
+        });
       }
       if (Array.isArray(data.tickets) && data.tickets.length > 0) {
         ticketsState = data.tickets;

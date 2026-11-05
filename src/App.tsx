@@ -206,6 +206,7 @@ export default function App() {
               onOpenVacateModal={setBrandToVacate}
               onOpenInvoiceModal={setInvoiceBrand}
               onSendRenewalReminders={handleSendRenewalReminders}
+              onTriggerNotification={triggerNotification}
             />
           )}
 
@@ -218,6 +219,7 @@ export default function App() {
               lowStockCount={metrics.lowStockCount}
               onAdjustStock={handleAdjustStock}
               onOpenReport={() => setIsReportOpen(true)}
+              onTriggerNotification={triggerNotification}
             />
           )}
 
