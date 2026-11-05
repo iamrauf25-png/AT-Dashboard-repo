@@ -31,4 +31,16 @@
     color: black !important;
     border: none !important;
   }
+
+  #stakeholder-printable-report {
+    background: white !important;
+    color: black !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    display: block !important;
+  }
 }

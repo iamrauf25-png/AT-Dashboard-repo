@@ -78,8 +78,8 @@ export const NewTicketModal: React.FC<NewTicketModalProps> = ({
         >
           <div className="flex justify-between items-center pb-3 border-b border-pink-100">
             <div className="flex items-center gap-2">
-              <div className="p-2 bg-pink-100 text-pink-700 rounded-xl">
-                <MessageSquare className="w-4 h-4" />
+              <div className="p-2 bg-pink-100 text-pink-700 rounded-xl shrink-0">
+                <MessageSquare className="w-4 h-4 shrink-0" />
               </div>
               <h3 id="ticket-modal-title" className="font-extrabold text-slate-900 text-sm">
                 Raise Floor Support Ticket
@@ -88,9 +88,9 @@ export const NewTicketModal: React.FC<NewTicketModalProps> = ({
             <button
               onClick={onClose}
               aria-label="Close modal"
-              className="text-slate-400 hover:text-slate-700 p-1.5 rounded-xl hover:bg-pink-100/60 transition-colors cursor-pointer"
+              className="text-slate-400 hover:text-slate-700 p-1.5 rounded-xl hover:bg-pink-100/60 transition-colors cursor-pointer shrink-0"
             >
-              <X className="w-4 h-4" />
+              <X className="w-4 h-4 shrink-0" />
             </button>
           </div>
 

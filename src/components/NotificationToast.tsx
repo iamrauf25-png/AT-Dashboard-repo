@@ -38,9 +38,9 @@ export const NotificationToast: React.FC<NotificationToastProps> = ({ notificati
           <button
             onClick={onClose}
             aria-label="Dismiss notification"
-            className="ml-2 hover:opacity-75 p-1 rounded-lg hover:bg-pink-100/60 transition-colors text-slate-500 hover:text-slate-800 cursor-pointer"
+            className="ml-2 hover:opacity-75 p-1 rounded-lg hover:bg-pink-100/60 transition-colors text-slate-500 hover:text-slate-800 cursor-pointer shrink-0"
           >
-            <X className="w-4 h-4" />
+            <X className="w-4 h-4 shrink-0" />
           </button>
         </motion.div>
       )}

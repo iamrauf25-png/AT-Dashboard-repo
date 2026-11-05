@@ -39,18 +39,18 @@ export const VacateModal: React.FC<VacateModalProps> = ({ brand, onClose, onConf
           className="bg-white border border-pink-200 rounded-3xl max-w-md w-full shadow-2xl shadow-pink-200/50 p-6"
         >
           <div className="flex justify-between items-center pb-3 border-b border-pink-100">
-            <div className="flex items-center gap-2 text-rose-600">
-              <ShieldAlert className="w-5 h-5" />
-              <h3 id="vacate-modal-title" className="font-extrabold text-slate-900 text-sm">
+            <div className="flex items-center gap-2 text-rose-600 min-w-0">
+              <ShieldAlert className="w-5 h-5 shrink-0" />
+              <h3 id="vacate-modal-title" className="font-extrabold text-slate-900 text-sm truncate">
                 Floor Slot Clearance: {brand.name}
               </h3>
             </div>
             <button
               onClick={onClose}
               aria-label="Close modal"
-              className="text-slate-400 hover:text-slate-700 p-1.5 rounded-xl hover:bg-pink-100/60 transition-colors"
+              className="text-slate-400 hover:text-slate-700 p-1.5 rounded-xl hover:bg-pink-100/60 transition-colors shrink-0"
             >
-              <X className="w-4 h-4" />
+              <X className="w-4 h-4 shrink-0" />
             </button>
           </div>
 

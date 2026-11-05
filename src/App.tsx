@@ -24,6 +24,7 @@ import { ZohoInvoiceModal } from './components/ZohoInvoiceModal';
 import { VacateModal } from './components/VacateModal';
 import { AddBrandModal } from './components/AddBrandModal';
 import { NewTicketModal } from './components/NewTicketModal';
+import { StakeholderReportModal } from './components/StakeholderReportModal';
 import { NotificationToast } from './components/NotificationToast';
 
 export default function App() {
@@ -40,6 +41,7 @@ export default function App() {
   const [vacateBrand, setVacateBrand] = useState<Brand | null>(null);
   const [isAddBrandOpen, setIsAddBrandOpen] = useState(false);
   const [isNewTicketOpen, setIsNewTicketOpen] = useState(false);
+  const [isReportOpen, setIsReportOpen] = useState(false);
 
   // System real-time clock
   useEffect(() => {
@@ -232,6 +234,7 @@ export default function App() {
         onRunPenaltyCheck={handleRunPenaltyCheck}
         onOpenAddBrand={() => setIsAddBrandOpen(true)}
         onOpenNewTicket={() => setIsNewTicketOpen(true)}
+        onOpenReport={() => setIsReportOpen(true)}
       />
 
       {/* Real-time Metric Strip */}
@@ -271,6 +274,7 @@ export default function App() {
               totalGMV={metrics.totalGMV}
               lowStockCount={metrics.lowStockCount}
               onAdjustStock={handleAdjustStock}
+              onOpenReport={() => setIsReportOpen(true)}
             />
           )}
 
@@ -333,6 +337,13 @@ export default function App() {
           setTickets((prev) => [newTicket, ...prev]);
           triggerNotification(`Support Ticket ${newTicket.id} issued to ${newTicket.assignee}`, 'info');
         }}
+      />
+
+      <StakeholderReportModal
+        isOpen={isReportOpen}
+        brands={brands}
+        onClose={() => setIsReportOpen(false)}
+        onTriggerNotification={triggerNotification}
       />
 
       {/* App Footer */}

@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Store, DollarSign, Package, TrendingUp, Minus, Plus } from 'lucide-react';
+import { Store, DollarSign, Package, TrendingUp, Minus, Plus, FileDown, Printer } from 'lucide-react';
 import { Brand } from '../types/index';
 import { formatINR } from '../utils/billing';
 
@@ -10,6 +10,7 @@ interface SalesInventoryTabProps {
   totalGMV: number;
   lowStockCount: number;
   onAdjustStock: (brandId: string, delta: number) => void;
+  onOpenReport?: () => void;
 }
 
 export const SalesInventoryTab: React.FC<SalesInventoryTabProps> = ({
@@ -18,6 +19,7 @@ export const SalesInventoryTab: React.FC<SalesInventoryTabProps> = ({
   totalGMV,
   lowStockCount,
   onAdjustStock,
+  onOpenReport,
 }) => {
   const totalStoreConcession = brands.reduce(
     (acc, b) => acc + (b.unitsSoldWeekly || 0) * (b.unitPrice || 0) * (b.commissionRate || 0.15),
@@ -44,11 +46,11 @@ export const SalesInventoryTab: React.FC<SalesInventoryTabProps> = ({
               {formatINR(totalGMV)}
             </div>
             <span className="text-[11px] text-emerald-700 font-medium flex items-center gap-1 mt-1">
-              <TrendingUp className="w-3.5 h-3.5" /> Across all physical consignment slots
+              <TrendingUp className="w-3.5 h-3.5 shrink-0" /> Across all physical consignment slots
             </span>
           </div>
-          <div className="p-3 bg-pink-50 border border-pink-200/80 rounded-2xl text-pink-600 shadow-2xs">
-            <Store className="w-6 h-6" />
+          <div className="p-3 bg-pink-50 border border-pink-200/80 rounded-2xl text-pink-600 shadow-2xs shrink-0">
+            <Store className="w-6 h-6 shrink-0" />
           </div>
         </motion.div>
 
@@ -65,8 +67,8 @@ export const SalesInventoryTab: React.FC<SalesInventoryTabProps> = ({
               Net commissions retained by Alt.Tribe
             </span>
           </div>
-          <div className="p-3 bg-rose-50 border border-rose-200/80 rounded-2xl text-rose-600 shadow-2xs">
-            <DollarSign className="w-6 h-6" />
+          <div className="p-3 bg-rose-50 border border-rose-200/80 rounded-2xl text-rose-600 shadow-2xs shrink-0">
+            <DollarSign className="w-6 h-6 shrink-0" />
           </div>
         </motion.div>
 
@@ -83,15 +85,15 @@ export const SalesInventoryTab: React.FC<SalesInventoryTabProps> = ({
               Threshold &lt; 5 units on display bay
             </span>
           </div>
-          <div className="p-3 bg-amber-50 border border-amber-200/80 rounded-2xl text-amber-700 shadow-2xs">
-            <Package className="w-6 h-6" />
+          <div className="p-3 bg-amber-50 border border-amber-200/80 rounded-2xl text-amber-700 shadow-2xs shrink-0">
+            <Package className="w-6 h-6 shrink-0" />
           </div>
         </motion.div>
       </div>
 
       {/* Main Velocity & Inventory Table */}
       <div className="bg-white rounded-2xl border border-pink-100 shadow-md shadow-pink-100/40 overflow-hidden">
-        <div className="p-4 border-b border-pink-100 flex items-center justify-between bg-white">
+        <div className="p-4 border-b border-pink-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white">
           <div>
             <h2 className="font-bold text-slate-900 text-sm">
               Weekly Shelf Velocity & Direct Stock Modifier
@@ -100,6 +102,23 @@ export const SalesInventoryTab: React.FC<SalesInventoryTabProps> = ({
               Use inline controls to log counter POS sales or restock receipts instantly
             </p>
           </div>
+
+          {/* Export Action Buttons */}
+          {onOpenReport && (
+            <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={onOpenReport}
+                aria-label="Export Stakeholder PDF Report"
+                className="px-3.5 py-1.5 bg-gradient-to-r from-pink-600 to-rose-500 hover:from-pink-500 hover:to-rose-400 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm shadow-pink-200 cursor-pointer shrink-0"
+                title="Open executive brand performance report and download clean PDF"
+              >
+                <FileDown className="w-3.5 h-3.5 shrink-0" />
+                <span>Export Stakeholder PDF</span>
+              </motion.button>
+            </div>
+          )}
         </div>
 
         <div className="overflow-x-auto">
@@ -180,20 +199,20 @@ export const SalesInventoryTab: React.FC<SalesInventoryTabProps> = ({
                           onClick={() => onAdjustStock(b.id, -1)}
                           disabled={b.stockOnHand <= 0}
                           aria-label={`Log 1 unit sold for ${b.name}`}
-                          className="w-7 h-7 flex items-center justify-center rounded-lg bg-white hover:bg-pink-50 disabled:opacity-40 text-slate-700 border border-pink-200 transition-colors cursor-pointer disabled:cursor-not-allowed shadow-2xs"
+                          className="w-7 h-7 flex items-center justify-center rounded-lg bg-white hover:bg-pink-50 disabled:opacity-40 text-slate-700 border border-pink-200 transition-colors cursor-pointer disabled:cursor-not-allowed shadow-2xs shrink-0"
                           title="Log 1 Unit Sold (Reduces bay stock, updates weekly GMV)"
                         >
-                          <Minus className="w-3.5 h-3.5" />
+                          <Minus className="w-3.5 h-3.5 shrink-0" />
                         </motion.button>
                         <motion.button
                           whileHover={{ scale: 1.03 }}
                           whileTap={{ scale: 0.97 }}
                           onClick={() => onAdjustStock(b.id, 5)}
                           aria-label={`Restock 5 units for ${b.name}`}
-                          className="px-2.5 py-1 flex items-center gap-1 rounded-lg bg-pink-50 hover:bg-pink-100 text-pink-700 border border-pink-200 transition-colors text-xs font-bold cursor-pointer shadow-2xs"
+                          className="px-2.5 py-1 flex items-center gap-1 rounded-lg bg-pink-50 hover:bg-pink-100 text-pink-700 border border-pink-200 transition-colors text-xs font-bold cursor-pointer shadow-2xs shrink-0"
                           title="Restock +5 units"
                         >
-                          <Plus className="w-3 h-3 text-pink-600" />
+                          <Plus className="w-3 h-3 text-pink-600 shrink-0" />
                           <span>+5 Restock</span>
                         </motion.button>
                       </div>

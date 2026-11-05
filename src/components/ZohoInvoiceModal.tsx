@@ -41,8 +41,8 @@ export const ZohoInvoiceModal: React.FC<ZohoInvoiceModalProps> = ({
           {/* Modal Header */}
           <div className="p-4 px-6 border-b border-pink-100 flex items-center justify-between sticky top-0 bg-white/95 backdrop-blur z-10">
             <div className="flex items-center gap-2.5">
-              <div className="p-2 bg-pink-100 text-pink-700 rounded-xl">
-                <FileText className="w-4 h-4" />
+              <div className="p-2 bg-pink-100 text-pink-700 rounded-xl shrink-0">
+                <FileText className="w-4 h-4 shrink-0" />
               </div>
               <h3 id="invoice-modal-title" className="font-extrabold text-slate-900 text-sm">
                 Zoho Invoice Settlement: <span className="text-pink-700">{brand.name}</span>
@@ -51,9 +51,9 @@ export const ZohoInvoiceModal: React.FC<ZohoInvoiceModalProps> = ({
             <button
               onClick={onClose}
               aria-label="Close invoice modal"
-              className="p-1.5 rounded-xl hover:bg-pink-100/60 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
+              className="p-1.5 rounded-xl hover:bg-pink-100/60 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer shrink-0"
             >
-              <X className="w-5 h-5" />
+              <X className="w-5 h-5 shrink-0" />
             </button>
           </div>
 

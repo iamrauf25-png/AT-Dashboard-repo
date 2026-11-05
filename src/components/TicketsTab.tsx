@@ -56,7 +56,7 @@ export const TicketsTab: React.FC<TicketsTabProps> = ({
             aria-label="Raise Support Ticket"
             className="px-3.5 py-1.5 bg-gradient-to-r from-pink-600 to-rose-500 hover:from-pink-500 hover:to-rose-400 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer shadow-md shadow-pink-200"
           >
-            <Plus className="w-3.5 h-3.5" />
+            <Plus className="w-3.5 h-3.5 shrink-0" />
             <span>Raise Support Ticket</span>
           </motion.button>
         </div>

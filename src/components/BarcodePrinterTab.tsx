@@ -141,9 +141,9 @@ export const BarcodePrinterTab: React.FC<BarcodePrinterTabProps> = ({
             whileHover={{ scale: 1.02, y: -1 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleBatchAllLowStock}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 transition-colors shadow-xs cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 transition-colors shadow-xs cursor-pointer shrink-0"
           >
-            <Sparkles className="w-3.5 h-3.5 text-rose-500" />
+            <Sparkles className="w-3.5 h-3.5 text-rose-500 shrink-0" />
             <span>Batch Low-Stock Tags</span>
           </motion.button>
 
@@ -151,9 +151,9 @@ export const BarcodePrinterTab: React.FC<BarcodePrinterTabProps> = ({
             whileHover={{ scale: 1.02, y: -1 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleCopyZPL}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-pink-50 hover:bg-pink-100 border border-pink-200 text-pink-700 transition-colors shadow-xs cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-pink-50 hover:bg-pink-100 border border-pink-200 text-pink-700 transition-colors shadow-xs cursor-pointer shrink-0"
           >
-            {copiedZPL ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-pink-500" />}
+            {copiedZPL ? <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> : <Copy className="w-3.5 h-3.5 text-pink-500 shrink-0" />}
             <span>{copiedZPL ? 'ZPL Copied!' : 'Copy Zebra ZPL'}</span>
           </motion.button>
 
@@ -161,9 +161,9 @@ export const BarcodePrinterTab: React.FC<BarcodePrinterTabProps> = ({
             whileHover={{ scale: 1.02, y: -1 }}
             whileTap={{ scale: 0.98 }}
             onClick={handlePrintSheet}
-            className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-xs font-bold bg-gradient-to-r from-pink-600 to-rose-500 hover:from-pink-500 hover:to-rose-400 text-white transition-all shadow-md shadow-pink-200 cursor-pointer"
+            className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-xs font-bold bg-gradient-to-r from-pink-600 to-rose-500 hover:from-pink-500 hover:to-rose-400 text-white transition-all shadow-md shadow-pink-200 cursor-pointer shrink-0"
           >
-            <Printer className="w-3.5 h-3.5" />
+            <Printer className="w-3.5 h-3.5 shrink-0" />
             <span>Print Label Sheet</span>
           </motion.button>
         </div>
