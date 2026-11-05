@@ -8,6 +8,8 @@ interface HeaderProps {
   onOpenAddBrand: () => void;
   onOpenNewTicket: () => void;
   onOpenReport?: () => void;
+  syncStatus?: 'connected' | 'connecting' | 'offline';
+  activeClients?: number;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -16,6 +18,8 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenAddBrand,
   onOpenNewTicket,
   onOpenReport,
+  syncStatus = 'connected',
+  activeClients = 1,
 }) => {
   return (
     <header className="border-b border-pink-200/80 bg-white/95 backdrop-blur-md sticky top-0 z-30 shadow-xs">
@@ -46,11 +50,26 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* Live Status Indicators (PC & Tablet) */}
-          <div className="hidden lg:flex items-center gap-4 text-xs text-slate-500">
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
+          <div className="hidden md:flex items-center gap-3 lg:gap-4 text-xs text-slate-500">
+            <div className="flex items-center gap-1.5 bg-pink-50/70 border border-pink-200/80 px-2.5 py-1 rounded-lg shadow-2xs">
+              <span
+                className={`w-2 h-2 rounded-full shrink-0 ${
+                  syncStatus === 'connected'
+                    ? 'bg-emerald-500 animate-pulse'
+                    : syncStatus === 'connecting'
+                    ? 'bg-amber-500 animate-ping'
+                    : 'bg-rose-500'
+                }`}
+              ></span>
               <span className="text-[11px]">
-                Sync: <span className="text-slate-800 font-mono font-bold">Real-Time</span>
+                Sync:{' '}
+                <span className="text-slate-800 font-mono font-bold">
+                  {syncStatus === 'connected'
+                    ? `Live (${activeClients} ${activeClients === 1 ? 'user' : 'users'})`
+                    : syncStatus === 'connecting'
+                    ? 'Connecting...'
+                    : 'Offline'}
+                </span>
               </span>
             </div>
             <div className="flex items-center gap-1.5 font-mono text-slate-700 bg-pink-50/70 px-2.5 py-1 rounded-lg border border-pink-200/80 shadow-2xs">

@@ -3,16 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { AnimatePresence } from 'motion/react';
-import { Brand, Ticket, TicketStatus, NotificationState, TabType } from './types/index';
-import { INITIAL_BRANDS, INITIAL_TICKETS } from './data/initialData';
+import { Brand, TicketStatus, NotificationState, TabType } from './types/index';
 import {
   evaluate24thRenewalAudit,
   calculateShortNoticePenalty,
   calculateTotalPenalty,
   getContractExpiryInfo,
 } from './utils/billing';
+import { useRealtimeSync } from './services/realtimeSync';
 import { Header } from './components/Header';
 import { MetricStrip, DashboardMetrics } from './components/MetricStrip';
 import { NavigationTabs } from './components/NavigationTabs';
@@ -28,9 +28,6 @@ import { StakeholderReportModal } from './components/StakeholderReportModal';
 import { NotificationToast } from './components/NotificationToast';
 
 export default function App() {
-  // --- CORE STATE ---
-  const [brands, setBrands] = useState<Brand[]>(INITIAL_BRANDS);
-  const [tickets, setTickets] = useState<Ticket[]>(INITIAL_TICKETS);
   const [activeTab, setActiveTab] = useState<TabType>('renewals');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -38,7 +35,7 @@ export default function App() {
 
   // Modals state
   const [invoiceBrand, setInvoiceBrand] = useState<Brand | null>(null);
-  const [vacateBrand, setVacateBrand] = useState<Brand | null>(null);
+  const [brandToVacate, setBrandToVacate] = useState<Brand | null>(null);
   const [isAddBrandOpen, setIsAddBrandOpen] = useState(false);
   const [isNewTicketOpen, setIsNewTicketOpen] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
@@ -49,12 +46,32 @@ export default function App() {
     return () => clearInterval(timer);
   }, []);
 
-  const triggerNotification = (text: string, type: 'info' | 'success' | 'warning' = 'info') => {
-    setNotification({ text, type });
-    setTimeout(() => {
-      setNotification((current) => (current?.text === text ? null : current));
-    }, 4000);
-  };
+  const triggerNotification = useCallback(
+    (text: string, type: 'info' | 'success' | 'warning' = 'info') => {
+      setNotification({ text, type });
+      setTimeout(() => {
+        setNotification((current) => (current?.text === text ? null : current));
+      }, 4000);
+    },
+    []
+  );
+
+  // --- REAL-TIME SERVER & MULTI-USER SYNCHRONIZATION ---
+  const {
+    brands,
+    tickets,
+    syncStatus,
+    activeClients,
+    addBrand,
+    renewBrand,
+    vacateBrand,
+    adjustStock,
+    audit24th,
+    addTicket,
+    updateTicketStatus,
+    toggleActionable,
+    addTicketNote,
+  } = useRealtimeSync(triggerNotification);
 
   // --- DERIVED METRICS ---
   const metrics: DashboardMetrics = useMemo(() => {
@@ -84,7 +101,7 @@ export default function App() {
   // --- PENALTY CHECK ENGINE (24TH OF MONTH RULE) ---
   const handleRunPenaltyCheck = () => {
     const { updatedBrands, newPenaltyCount } = evaluate24thRenewalAudit(brands);
-    setBrands(updatedBrands);
+    audit24th(updatedBrands);
     triggerNotification(
       `24th Cycle Audit Complete: Evaluated ${brands.length} brand contracts. ${newPenaltyCount} new ₹250 penalty flags applied.`,
       newPenaltyCount > 0 ? 'warning' : 'success'
@@ -93,23 +110,7 @@ export default function App() {
 
   // --- BRAND CONTRACT ACTIONS ---
   const handleRenewBrand = (id: string) => {
-    setBrands((prev) =>
-      prev.map((b) => {
-        if (b.id === id) {
-          // Push agreement end date forward by 30 days
-          const currentEnd = b.agreementEndDate ? new Date(b.agreementEndDate) : new Date('2026-11-05');
-          const nextEnd = new Date(currentEnd.getTime() + 30 * 24 * 60 * 60 * 1000);
-          const nextEndStr = nextEnd.toISOString().split('T')[0];
-          return {
-            ...b,
-            status: 'Active',
-            lateFee: 0,
-            agreementEndDate: nextEndStr,
-          };
-        }
-        return b;
-      })
-    );
+    renewBrand(id);
     triggerNotification('Brand agreement successfully renewed for 30 days. Penalties cleared.', 'success');
   };
 
@@ -122,21 +123,7 @@ export default function App() {
 
   const handleConfirmVacate = (brandId: string, advanceNoticeDays: number) => {
     const { shortNoticeDays, fee } = calculateShortNoticePenalty(advanceNoticeDays);
-
-    setBrands((prev) =>
-      prev.map((b) => {
-        if (b.id === brandId) {
-          return {
-            ...b,
-            status: 'Discontinued',
-            shortNoticeDays,
-            emergencyRemovalFee: fee,
-            noticeDate: new Date().toISOString().split('T')[0],
-          };
-        }
-        return b;
-      })
-    );
+    vacateBrand(brandId, advanceNoticeDays);
 
     triggerNotification(
       `Discontinuation processed. ${
@@ -148,67 +135,21 @@ export default function App() {
 
   // --- INLINE INVENTORY ADJUSTMENTS ---
   const handleAdjustStock = (brandId: string, delta: number) => {
-    setBrands((prev) =>
-      prev.map((b) => {
-        if (b.id === brandId) {
-          const nextStock = Math.max(0, b.stockOnHand + delta);
-          // If delta is negative, count as an instant physical point-of-sale
-          const nextSales = delta < 0 ? b.unitsSoldWeekly + 1 : b.unitsSoldWeekly;
-          return {
-            ...b,
-            stockOnHand: nextStock,
-            unitsSoldWeekly: nextSales,
-          };
-        }
-        return b;
-      })
-    );
+    adjustStock(brandId, delta);
   };
 
   // --- TICKET ACTIONS ---
   const handleUpdateTicketStatus = (ticketId: string, newStatus: TicketStatus) => {
-    setTickets((prev) =>
-      prev.map((item) => (item.id === ticketId ? { ...item, status: newStatus } : item))
-    );
+    updateTicketStatus(ticketId, newStatus);
     triggerNotification(`Ticket ${ticketId} marked as ${newStatus}`, 'info');
   };
 
   const handleToggleActionable = (ticketId: string, actionableId: number) => {
-    setTickets((prev) =>
-      prev.map((tk) => {
-        if (tk.id === ticketId) {
-          return {
-            ...tk,
-            actionables: tk.actionables.map((a) =>
-              a.id === actionableId ? { ...a, done: !a.done } : a
-            ),
-          };
-        }
-        return tk;
-      })
-    );
+    toggleActionable(ticketId, actionableId);
   };
 
   const handleAddTicketNote = (ticketId: string, noteText: string) => {
-    setTickets((prev) =>
-      prev.map((tk) => {
-        if (tk.id === ticketId) {
-          return {
-            ...tk,
-            notes: [
-              ...tk.notes,
-              {
-                id: Date.now(),
-                author: 'Current Staff',
-                time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
-                text: noteText,
-              },
-            ],
-          };
-        }
-        return tk;
-      })
-    );
+    addTicketNote(ticketId, noteText);
   };
 
   // --- FILTERED BRANDS ---
@@ -235,6 +176,8 @@ export default function App() {
         onOpenAddBrand={() => setIsAddBrandOpen(true)}
         onOpenNewTicket={() => setIsNewTicketOpen(true)}
         onOpenReport={() => setIsReportOpen(true)}
+        syncStatus={syncStatus}
+        activeClients={activeClients}
       />
 
       {/* Real-time Metric Strip */}
@@ -260,7 +203,7 @@ export default function App() {
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
               onRenewBrand={handleRenewBrand}
-              onOpenVacateModal={setVacateBrand}
+              onOpenVacateModal={setBrandToVacate}
               onOpenInvoiceModal={setInvoiceBrand}
               onSendRenewalReminders={handleSendRenewalReminders}
             />
@@ -313,8 +256,8 @@ export default function App() {
       />
 
       <VacateModal
-        brand={vacateBrand}
-        onClose={() => setVacateBrand(null)}
+        brand={brandToVacate}
+        onClose={() => setBrandToVacate(null)}
         onConfirmVacate={handleConfirmVacate}
       />
 
@@ -323,7 +266,7 @@ export default function App() {
         existingCount={brands.length}
         onClose={() => setIsAddBrandOpen(false)}
         onAddBrand={(newBrand) => {
-          setBrands((prev) => [...prev, newBrand]);
+          addBrand(newBrand);
           triggerNotification(`Brand "${newBrand.name}" boarded to slot ${newBrand.slotId}`, 'success');
         }}
       />
@@ -334,7 +277,7 @@ export default function App() {
         existingTicketsCount={tickets.length}
         onClose={() => setIsNewTicketOpen(false)}
         onCreateTicket={(newTicket) => {
-          setTickets((prev) => [newTicket, ...prev]);
+          addTicket(newTicket);
           triggerNotification(`Support Ticket ${newTicket.id} issued to ${newTicket.assignee}`, 'info');
         }}
       />
