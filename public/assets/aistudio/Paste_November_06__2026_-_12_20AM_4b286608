@@ -1,0 +1,1611 @@
+import React, { useState, useMemo, useEffect } from 'react';
+import {
+  Calendar,
+  AlertTriangle,
+  FileText,
+  DollarSign,
+  Package,
+  CheckCircle2,
+  Clock,
+  Plus,
+  Minus,
+  Search,
+  ArrowUpRight,
+  ShieldAlert,
+  Send,
+  X,
+  Printer,
+  ExternalLink,
+  ChevronRight,
+  TrendingUp,
+  Store,
+  RefreshCw,
+  MessageSquare,
+  Sparkles,
+  AlertCircle
+} from 'lucide-react';
+
+// --- CURRENCY & DATE UTILITIES ---
+const formatINR = (val) => {
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 0
+  }).format(Number.isFinite(val) ? val : 0);
+};
+
+// --- INITIAL MOCK DATA ---
+const INITIAL_BRANDS = [
+  {
+    id: 'BRD-01',
+    name: 'KalaKriti Ceramics',
+    category: 'Craft Ceramics',
+    slotId: 'Shelf C-04',
+    monthlyRent: 7200,
+    renewalDeadlineDay: 24,
+    status: 'Active',
+    lateFee: 0,
+    shortNoticeDays: 0,
+    emergencyRemovalFee: 0,
+    unitsSoldWeekly: 26,
+    stockOnHand: 18,
+    unitPrice: 1850,
+    commissionRate: 0.15,
+    noticeDate: null,
+    contactPerson: 'Aditi Sharma',
+    contactEmail: 'aditi@kalakriti.in',
+    gstin: '29ABCDE1234F1Z5'
+  },
+  {
+    id: 'BRD-02',
+    name: 'Veda Earth Botanicals',
+    category: 'Organic Skincare',
+    slotId: 'Aisle S-02',
+    monthlyRent: 6500,
+    renewalDeadlineDay: 24,
+    status: 'Overdue',
+    lateFee: 250,
+    shortNoticeDays: 0,
+    emergencyRemovalFee: 0,
+    unitsSoldWeekly: 44,
+    stockOnHand: 4,
+    unitPrice: 920,
+    commissionRate: 0.18,
+    noticeDate: null,
+    contactPerson: 'Dr. Nikhil Rao',
+    contactEmail: 'nikhil@vedaearth.co',
+    gstin: '29FGHIJ5678K2Z3'
+  },
+  {
+    id: 'BRD-03',
+    name: 'UrbanKhadi Apparel',
+    category: 'Sustainable Fashion',
+    slotId: 'Rack A-01',
+    monthlyRent: 8500,
+    renewalDeadlineDay: 24,
+    status: 'Active',
+    lateFee: 0,
+    shortNoticeDays: 0,
+    emergencyRemovalFee: 0,
+    unitsSoldWeekly: 38,
+    stockOnHand: 25,
+    unitPrice: 2400,
+    commissionRate: 0.16,
+    noticeDate: null,
+    contactPerson: 'Meera Nambiar',
+    contactEmail: 'meera@urbankhadi.com',
+    gstin: '29KLMNO9012P3Z7'
+  },
+  {
+    id: 'BRD-04',
+    name: 'Goa Roastery Artisanal',
+    category: 'Artisanal Snacks',
+    slotId: 'Kiosk F-07',
+    monthlyRent: 6500,
+    renewalDeadlineDay: 24,
+    status: 'Grace Period',
+    lateFee: 0,
+    shortNoticeDays: 0,
+    emergencyRemovalFee: 0,
+    unitsSoldWeekly: 52,
+    stockOnHand: 3,
+    unitPrice: 550,
+    commissionRate: 0.12,
+    noticeDate: null,
+    contactPerson: 'Clyde D’Souza',
+    contactEmail: 'clyde@goaroastery.in',
+    gstin: '30QRSTU3456V4Z9'
+  },
+  {
+    id: 'BRD-05',
+    name: 'Mitti Soul Footwear',
+    category: 'Vegan Footwear',
+    slotId: 'Pod W-09',
+    monthlyRent: 7500,
+    renewalDeadlineDay: 24,
+    status: 'Notice Served',
+    lateFee: 0,
+    shortNoticeDays: 1,
+    emergencyRemovalFee: 250,
+    unitsSoldWeekly: 14,
+    stockOnHand: 7,
+    unitPrice: 2900,
+    commissionRate: 0.15,
+    noticeDate: '2026-11-03',
+    contactPerson: 'Saurabh Jain',
+    contactEmail: 'saurabh@mittisoul.in',
+    gstin: '29WXYZ7890A5Z1'
+  },
+  {
+    id: 'BRD-06',
+    name: 'Neev Living Co.',
+    category: 'Home & Decor',
+    slotId: 'Wall L-03',
+    monthlyRent: 6500,
+    renewalDeadlineDay: 24,
+    status: 'Active',
+    lateFee: 0,
+    shortNoticeDays: 0,
+    emergencyRemovalFee: 0,
+    unitsSoldWeekly: 29,
+    stockOnHand: 15,
+    unitPrice: 1650,
+    commissionRate: 0.15,
+    noticeDate: null,
+    contactPerson: 'Ritu Varma',
+    contactEmail: 'ritu@neevliving.com',
+    gstin: '29BCDEF4321G6Z8'
+  },
+  {
+    id: 'BRD-07',
+    name: 'The Chai Collective',
+    category: 'Specialty Teas',
+    slotId: 'Shelf F-02',
+    monthlyRent: 6500,
+    renewalDeadlineDay: 24,
+    status: 'Discontinued',
+    lateFee: 250,
+    shortNoticeDays: 2,
+    emergencyRemovalFee: 500,
+    unitsSoldWeekly: 11,
+    stockOnHand: 0,
+    unitPrice: 420,
+    commissionRate: 0.14,
+    noticeDate: '2026-11-01',
+    contactPerson: 'Kabir Sen',
+    contactEmail: 'kabir@chaicollective.in',
+    gstin: '29GHIJK8765L7Z2'
+  }
+];
+
+const INITIAL_TICKETS = [
+  {
+    id: 'ALT-TK-101',
+    brandId: 'BRD-02',
+    brandName: 'Veda Earth Botanicals',
+    category: 'Restock Discrepancy',
+    urgency: 'Critical',
+    subject: 'Inventory discrepancy in Rosehip Serum on Shelf S-02',
+    assignee: 'Ops Specialist (Rohan)',
+    status: 'In Progress',
+    createdDate: '04 Nov 2026',
+    actionables: [
+      { id: 1, text: 'Audit barcode scans vs. physical bay count', done: true },
+      { id: 2, text: 'Confirm CCTV footage of bay restocking on Monday', done: false },
+      { id: 3, text: 'Issue stock recount slip to brand founder', done: false }
+    ],
+    notes: [
+      { id: 1, author: 'Rohan (Ops Specialist)', time: '04 Nov, 11:30 AM', text: 'Checked Bay S-02. System recorded 6 units, only 4 physical units available.' }
+    ]
+  },
+  {
+    id: 'ALT-TK-102',
+    brandId: 'BRD-05',
+    brandName: 'Mitti Soul Footwear',
+    category: 'Rent/Billing',
+    urgency: 'High',
+    subject: 'Discontinuation notice & emergency bay clearance dispute',
+    assignee: 'Accounts (Pooja)',
+    status: 'Open',
+    createdDate: '03 Nov 2026',
+    actionables: [
+      { id: 1, text: 'Review 2-day short notice clearance log', done: true },
+      { id: 2, text: 'Apply standard ₹250/day short notice surcharge', done: true },
+      { id: 3, text: 'Generate settlement invoice via Zoho mock engine', done: false }
+    ],
+    notes: [
+      { id: 1, author: 'Pooja (Accounts)', time: '03 Nov, 04:15 PM', text: 'Brand gave 1 day notice instead of 2. ₹250 emergency removal fee applied.' }
+    ]
+  },
+  {
+    id: 'ALT-TK-103',
+    brandId: 'BRD-01',
+    brandName: 'KalaKriti Ceramics',
+    category: 'Display Maintenance',
+    urgency: 'Medium',
+    subject: 'LED strip spotlight flickering over Shelf C-04',
+    assignee: 'Floor Lead (Vikram)',
+    status: 'Resolved',
+    createdDate: '02 Nov 2026',
+    actionables: [
+      { id: 1, text: 'Replace 12V DC power transformer on track light', done: true },
+      { id: 2, text: 'Test illumination for fragile ceramic glazes', done: true }
+    ],
+    notes: [
+      { id: 1, author: 'Vikram (Floor Lead)', time: '02 Nov, 06:00 PM', text: 'Replaced ballast and verified with lux meter. Display is pristine.' }
+    ]
+  }
+];
+
+export default function AltTribeApp() {
+  // --- CORE STATE ---
+  const [brands, setBrands] = useState(INITIAL_BRANDS);
+  const [tickets, setTickets] = useState(INITIAL_TICKETS);
+  const [activeTab, setActiveTab] = useState('renewals'); // 'renewals' | 'sales' | 'tickets'
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [notification, setNotification] = useState(null);
+
+  // Modals
+  const [invoiceBrand, setInvoiceBrand] = useState(null);
+  const [isAddBrandOpen, setIsAddBrandOpen] = useState(false);
+  const [isNewTicketOpen, setIsNewTicketOpen] = useState(false);
+  const [activeTicketDetails, setActiveTicketDetails] = useState(null);
+
+  // System clock
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const triggerNotification = (text, type = 'info') => {
+    setNotification({ text, type });
+    setTimeout(() => setNotification(null), 4000);
+  };
+
+  // --- DERIVED METRICS ---
+  const metrics = useMemo(() => {
+    const totalActive = brands.filter((b) => b.status === 'Active' || b.status === 'Grace Period').length;
+    const totalPenalties = brands.reduce((acc, b) => acc + (b.lateFee || 0) + (b.emergencyRemovalFee || 0), 0);
+    const totalFloorRent = brands.reduce((acc, b) => acc + (b.monthlyRent || 0), 0);
+    const totalGMV = brands.reduce((acc, b) => acc + (b.unitsSoldWeekly || 0) * (b.unitPrice || 0), 0);
+    const lowStockCount = brands.filter((b) => b.stockOnHand < 5).length;
+    const overdueCount = brands.filter((b) => b.status === 'Overdue').length;
+
+    return {
+      totalActive,
+      totalPenalties,
+      totalFloorRent,
+      totalGMV,
+      lowStockCount,
+      overdueCount,
+      totalProjectedAltRevenue: totalFloorRent + totalPenalties
+    };
+  }, [brands]);
+
+  // --- PENALTY CHECK ENGINE (24TH OF MONTH RULE) ---
+  const runPenaltyCheck = () => {
+    let penaltyCount = 0;
+    const updated = brands.map((b) => {
+      // If brand is not already renewed/active or is overdue past 24th
+      if (b.status === 'Overdue' || b.status === 'Grace Period') {
+        const newLateFee = b.lateFee === 0 ? 250 : b.lateFee;
+        if (b.lateFee === 0) penaltyCount++;
+        return {
+          ...b,
+          status: 'Overdue',
+          lateFee: newLateFee
+        };
+      }
+      return b;
+    });
+
+    setBrands(updated);
+    triggerNotification(
+      `24th Cycle Audit Complete: Evaluated ${brands.length} brand contracts. ${penaltyCount} new ₹250 penalty flags applied.`,
+      penaltyCount > 0 ? 'warning' : 'success'
+    );
+  };
+
+  // --- BRAND ACTIONS ---
+  const handleRenewBrand = (id) => {
+    setBrands((prev) =>
+      prev.map((b) => {
+        if (b.id === id) {
+          return {
+            ...b,
+            status: 'Active',
+            lateFee: 0
+          };
+        }
+        return b;
+      })
+    );
+    triggerNotification('Brand contract successfully renewed for the upcoming cycle. Penalties cleared.', 'success');
+  };
+
+  const handleMarkDiscontinuation = (id, noticeDays) => {
+    const days = parseInt(noticeDays, 10);
+    const isShortNotice = days < 2;
+    const emergencyFee = isShortNotice ? (2 - days) * 250 : 0;
+
+    setBrands((prev) =>
+      prev.map((b) => {
+        if (b.id === id) {
+          return {
+            ...b,
+            status: 'Discontinued',
+            shortNoticeDays: isShortNotice ? 2 - days : 0,
+            emergencyRemovalFee: emergencyFee,
+            noticeDate: new Date().toISOString().split('T')[0]
+          };
+        }
+        return b;
+      })
+    );
+
+    triggerNotification(
+      `Discontinuation processed. ${isShortNotice ? `Short notice penalty of ₹${emergencyFee} added.` : 'Standard clearance scheduled.'}`,
+      isShortNotice ? 'warning' : 'info'
+    );
+  };
+
+  // --- INLINE INVENTORY ADJUSTERS ---
+  const adjustStock = (brandId, delta) => {
+    setBrands((prev) =>
+      prev.map((b) => {
+        if (b.id === brandId) {
+          const nextStock = Math.max(0, b.stockOnHand + delta);
+          // If delta is negative, count as an instant physical point-of-sale
+          const nextSales = delta < 0 ? b.unitsSoldWeekly + 1 : b.unitsSoldWeekly;
+          return {
+            ...b,
+            stockOnHand: nextStock,
+            unitsSoldWeekly: nextSales
+          };
+        }
+        return b;
+      })
+    );
+  };
+
+  // --- FILTERED BRANDS ---
+  const filteredBrands = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return brands;
+    return brands.filter(
+      (b) =>
+        b.name.toLowerCase().includes(q) ||
+        b.category.toLowerCase().includes(q) ||
+        b.slotId.toLowerCase().includes(q)
+    );
+  }, [brands, searchQuery]);
+
+  return (
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-indigo-500 selection:text-white">
+      {/* NOTIFICATION TOAST */}
+      {notification && (
+        <div
+          className={`fixed top-5 right-5 z-50 flex items-center gap-3 px-4 py-3 rounded-lg shadow-2xl border text-sm backdrop-blur-md transition-all animate-bounce ${
+            notification.type === 'warning'
+              ? 'bg-amber-950/90 border-amber-500/50 text-amber-200'
+              : notification.type === 'success'
+              ? 'bg-emerald-950/90 border-emerald-500/50 text-emerald-200'
+              : 'bg-indigo-950/90 border-indigo-500/50 text-indigo-200'
+          }`}
+        >
+          <AlertCircle className="w-5 h-5 flex-shrink-0" />
+          <span>{notification.text}</span>
+          <button onClick={() => setNotification(null)} className="ml-2 hover:opacity-75">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      {/* TOP REAL-TIME APP HEADER */}
+      <header className="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* Logo & Hub Info */}
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-gradient-to-tr from-indigo-600 via-indigo-500 to-amber-500 flex items-center justify-center font-bold text-lg shadow-lg shadow-indigo-500/20 text-white">
+                A•T
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h1 className="font-bold text-lg tracking-tight text-white">Alt.Tribe</h1>
+                  <span className="text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded bg-indigo-950 border border-indigo-700/60 text-indigo-300">
+                    Retail Ops Engine
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400">Concept Space & Brand Concession Hub</p>
+              </div>
+            </div>
+
+            {/* Live Status Indicators */}
+            <div className="hidden md:flex items-center gap-6 text-xs text-slate-400">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>System Sync: <span className="text-slate-200 font-mono">Real-Time</span></span>
+              </div>
+              <div className="flex items-center gap-2 font-mono text-slate-300 bg-slate-800/80 px-2.5 py-1 rounded border border-slate-700">
+                <Clock className="w-3.5 h-3.5 text-indigo-400" />
+                <span>{currentTime.toLocaleTimeString('en-IN', { hour12: true })}</span>
+              </div>
+              <div className="bg-slate-800/60 border border-slate-700/70 px-3 py-1 rounded text-slate-300">
+                Deadline: <span className="font-semibold text-amber-400">24th Monthly</span>
+              </div>
+            </div>
+
+            {/* Header Fast Actions */}
+            <div className="flex items-center gap-2.5">
+              <button
+                onClick={runPenaltyCheck}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/40 text-rose-300 transition-colors shadow-sm"
+                title="Evaluate contracts against the 24th deadline rule"
+              >
+                <ShieldAlert className="w-3.5 h-3.5 text-rose-400" />
+                <span className="hidden sm:inline">Run 24th Penalty Check</span>
+                <span className="sm:hidden">Penalty Audit</span>
+              </button>
+
+              <button
+                onClick={() => setIsAddBrandOpen(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-colors shadow-md shadow-indigo-600/30"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add Brand</span>
+              </button>
+
+              <button
+                onClick={() => setIsNewTicketOpen(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 transition-colors"
+              >
+                <MessageSquare className="w-3.5 h-3.5 text-amber-400" />
+                <span className="hidden sm:inline">New Ticket</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* METRIC STRIP */}
+        <div className="bg-slate-900/60 border-t border-slate-800/80 px-4 sm:px-6 lg:px-8 py-2.5">
+          <div className="max-w-7xl mx-auto grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4 text-xs">
+            <div>
+              <span className="text-slate-400 block">Active Brands</span>
+              <span className="font-bold text-slate-100 text-sm">{metrics.totalActive} on Floor</span>
+            </div>
+            <div>
+              <span className="text-slate-400 block">Overdue Renewals</span>
+              <span className={`font-bold text-sm ${metrics.overdueCount > 0 ? 'text-rose-400' : 'text-slate-200'}`}>
+                {metrics.overdueCount} Brands
+              </span>
+            </div>
+            <div>
+              <span className="text-slate-400 block">Accrued Penalties</span>
+              <span className="font-bold text-rose-400 text-sm">{formatINR(metrics.totalPenalties)}</span>
+            </div>
+            <div>
+              <span className="text-slate-400 block">Floor Fixed Rent</span>
+              <span className="font-bold text-slate-100 text-sm">{formatINR(metrics.totalFloorRent)}</span>
+            </div>
+            <div>
+              <span className="text-slate-400 block">Combined GMV (Wk)</span>
+              <span className="font-bold text-emerald-400 text-sm">{formatINR(metrics.totalGMV)}</span>
+            </div>
+            <div>
+              <span className="text-slate-400 block">Low Stock Items</span>
+              <span className={`font-bold text-sm ${metrics.lowStockCount > 0 ? 'text-amber-400' : 'text-emerald-400'}`}>
+                {metrics.lowStockCount} Brands (&lt;5 units)
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* NAVIGATION TABS */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex gap-8 border-t border-slate-800 text-xs font-medium">
+          <button
+            onClick={() => setActiveTab('renewals')}
+            className={`py-3 flex items-center gap-2 border-b-2 transition-all ${
+              activeTab === 'renewals'
+                ? 'border-indigo-500 text-indigo-400 font-semibold'
+                : 'border-transparent text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Calendar className="w-4 h-4" />
+            <span>Renewal & Invoicing Hub</span>
+            {metrics.overdueCount > 0 && (
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-rose-500/20 text-rose-400 border border-rose-500/40">
+                {metrics.overdueCount}
+              </span>
+            )}
+          </button>
+
+          <button
+            onClick={() => setActiveTab('sales')}
+            className={`py-3 flex items-center gap-2 border-b-2 transition-all ${
+              activeTab === 'sales'
+                ? 'border-indigo-500 text-indigo-400 font-semibold'
+                : 'border-transparent text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <TrendingUp className="w-4 h-4" />
+            <span>Sales & Inventory Performance</span>
+            {metrics.lowStockCount > 0 && (
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                {metrics.lowStockCount}
+              </span>
+            )}
+          </button>
+
+          <button
+            onClick={() => setActiveTab('tickets')}
+            className={`py-3 flex items-center gap-2 border-b-2 transition-all ${
+              activeTab === 'tickets'
+                ? 'border-indigo-500 text-indigo-400 font-semibold'
+                : 'border-transparent text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <MessageSquare className="w-4 h-4" />
+            <span>Brand Ticket Resolution Desk</span>
+            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-800 text-slate-400">
+              {tickets.filter((t) => t.status !== 'Resolved').length}
+            </span>
+          </button>
+        </div>
+      </header>
+
+      {/* MAIN CONTENT AREA */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        {/* GLOBAL SEARCH / FILTERS */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-900/60 p-3 rounded-xl border border-slate-800">
+          <div className="relative w-full sm:w-96">
+            <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-500" />
+            <input
+              type="text"
+              placeholder="Search brand, category, or bay ID (e.g. 'Ceramics', 'Shelf C-04')..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs placeholder:text-slate-500 text-slate-200 focus:outline-none focus:border-indigo-500 transition-colors"
+            />
+          </div>
+          <div className="flex items-center gap-2 text-xs text-slate-400 self-end sm:self-auto">
+            <span>Alt.Tribe Policy:</span>
+            <span className="text-slate-300 bg-slate-800/80 px-2 py-1 rounded">Base Space: ₹6,500/mo</span>
+            <span className="text-rose-300 bg-rose-950/40 border border-rose-800/40 px-2 py-1 rounded">
+              Late: +₹250 post-24th
+            </span>
+            <span className="text-amber-300 bg-amber-950/40 border border-amber-800/40 px-2 py-1 rounded">
+              Short Notice: +₹250/day
+            </span>
+          </div>
+        </div>
+
+        {/* TAB 1: RENEWAL & INVOICING HUB */}
+        {activeTab === 'renewals' && (
+          <div className="space-y-4">
+            <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-xl">
+              <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+                <div>
+                  <h2 className="font-semibold text-slate-100 text-sm">Contract Renewal & Penalty Ledger</h2>
+                  <p className="text-xs text-slate-400">
+                    Automated enforcement of the 24th renewal cutoff and short-notice penalties
+                  </p>
+                </div>
+                <span className="text-xs text-slate-400 bg-slate-800 px-2.5 py-1 rounded border border-slate-700">
+                  Showing {filteredBrands.length} of {brands.length} Brands
+                </span>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-950/60 text-slate-400 font-semibold border-b border-slate-800 uppercase tracking-wider">
+                    <tr>
+                      <th className="py-3 px-4">Brand & Category</th>
+                      <th className="py-3 px-3">Slot ID</th>
+                      <th className="py-3 px-3">Base Rent</th>
+                      <th className="py-3 px-3">Next Due</th>
+                      <th className="py-3 px-3">Status</th>
+                      <th className="py-3 px-3">Penalties Accrued</th>
+                      <th className="py-3 px-3">Discontinuation Info</th>
+                      <th className="py-3 px-4 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                    {filteredBrands.map((b) => {
+                      const totalBrandPenalty = (b.lateFee || 0) + (b.emergencyRemovalFee || 0);
+                      const isPast24th = b.status === 'Overdue';
+
+                      return (
+                        <tr key={b.id} className="hover:bg-slate-800/40 transition-colors">
+                          <td className="py-3 px-4">
+                            <div className="font-medium text-slate-100">{b.name}</div>
+                            <div className="text-[11px] text-slate-400 flex items-center gap-1.5 mt-0.5">
+                              <span>{b.category}</span>
+                              <span className="text-slate-600">•</span>
+                              <span className="text-slate-500 font-mono">{b.id}</span>
+                            </div>
+                          </td>
+                          <td className="py-3 px-3 font-mono text-indigo-300">
+                            <span className="bg-slate-800 px-2 py-0.5 rounded border border-slate-700/80">
+                              {b.slotId}
+                            </span>
+                          </td>
+                          <td className="py-3 px-3 font-semibold text-slate-100">
+                            {formatINR(b.monthlyRent)}
+                            <span className="text-[10px] text-slate-500 block font-normal">per month</span>
+                          </td>
+                          <td className="py-3 px-3">
+                            <div className="flex items-center gap-1 font-mono text-slate-200">
+                              <Calendar className="w-3 h-3 text-slate-400" />
+                              <span>24th Nov 2026</span>
+                            </div>
+                            <span className="text-[10px] text-slate-500">Cutoff: 11:59 PM</span>
+                          </td>
+                          <td className="py-3 px-3">
+                            {b.status === 'Active' && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                <CheckCircle2 className="w-3 h-3" /> Active
+                              </span>
+                            )}
+                            {b.status === 'Grace Period' && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-amber-500/10 text-amber-300 border border-amber-500/20">
+                                <Clock className="w-3 h-3" /> Grace (Due 24th)
+                              </span>
+                            )}
+                            {b.status === 'Overdue' && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                                <AlertTriangle className="w-3 h-3" /> Overdue (Past 24th)
+                              </span>
+                            )}
+                            {b.status === 'Notice Served' && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-sky-500/10 text-sky-400 border border-sky-500/20">
+                                Notice Served
+                              </span>
+                            )}
+                            {b.status === 'Discontinued' && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-slate-700/50 text-slate-400 border border-slate-700">
+                                Discontinued
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-3 px-3">
+                            {totalBrandPenalty > 0 ? (
+                              <div>
+                                <span className="font-bold text-rose-400 font-mono">
+                                  {formatINR(totalBrandPenalty)}
+                                </span>
+                                <div className="text-[10px] text-rose-300/80 flex flex-col">
+                                  {b.lateFee > 0 && <span>• ₹250 Late Renewal</span>}
+                                  {b.emergencyRemovalFee > 0 && <span>• ₹{b.emergencyRemovalFee} Short Notice</span>}
+                                </div>
+                              </div>
+                            ) : (
+                              <span className="text-emerald-400 font-mono text-[11px]">₹0 (Clean)</span>
+                            )}
+                          </td>
+                          <td className="py-3 px-3 text-slate-400">
+                            {b.noticeDate ? (
+                              <div>
+                                <span className="text-slate-300 font-mono">{b.noticeDate}</span>
+                                {b.shortNoticeDays > 0 ? (
+                                  <span className="block text-[10px] text-amber-400">
+                                    Short notice: {b.shortNoticeDays}d under min 2-day
+                                  </span>
+                                ) : (
+                                  <span className="block text-[10px] text-emerald-400">Standard notice met</span>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-slate-600">—</span>
+                            )}
+                          </td>
+                          <td className="py-3 px-4 text-right">
+                            <div className="flex items-center justify-end gap-1.5">
+                              {b.status === 'Overdue' || b.status === 'Grace Period' ? (
+                                <button
+                                  onClick={() => handleRenewBrand(b.id)}
+                                  className="px-2.5 py-1 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 rounded text-xs transition-colors"
+                                  title="Clear late fee and renew for 30 days"
+                                >
+                                  Renew Now
+                                </button>
+                              ) : null}
+
+                              {b.status !== 'Discontinued' && (
+                                <button
+                                  onClick={() => {
+                                    const noticeDays = prompt(
+                                      `Enter advance notice days given by ${b.name} (Policy requires at least 2 days advance notice):`,
+                                      '0'
+                                    );
+                                    if (noticeDays !== null && !isNaN(noticeDays)) {
+                                      handleMarkDiscontinuation(b.id, noticeDays);
+                                    }
+                                  }}
+                                  className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded text-xs transition-colors"
+                                  title="Trigger floor exit workflow"
+                                >
+                                  Vacate
+                                </button>
+                              )}
+
+                              <button
+                                onClick={() => setInvoiceBrand(b)}
+                                className="px-2.5 py-1 bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-200 border border-indigo-500/40 rounded text-xs flex items-center gap-1 transition-colors"
+                                title="Open Zoho Mock Statement & Tax Invoice"
+                              >
+                                <FileText className="w-3 h-3" />
+                                <span>Zoho Invoice</span>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 2: SALES, INVENTORY & REVENUE TRACKER */}
+        {activeTab === 'sales' && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl flex items-center justify-between">
+                <div>
+                  <span className="text-xs text-slate-400">Total Floor Gross Merchandise Value</span>
+                  <div className="text-xl font-bold text-white mt-1">{formatINR(metrics.totalGMV)}</div>
+                  <span className="text-[11px] text-emerald-400 flex items-center gap-1 mt-1">
+                    <TrendingUp className="w-3 h-3" /> Across all physical consignment slots
+                  </span>
+                </div>
+                <div className="p-3 bg-indigo-600/10 border border-indigo-500/20 rounded-xl text-indigo-400">
+                  <Store className="w-6 h-6" />
+                </div>
+              </div>
+
+              <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl flex items-center justify-between">
+                <div>
+                  <span className="text-xs text-slate-400">Est. Store Concession Share (Avg 15%)</span>
+                  <div className="text-xl font-bold text-indigo-300 mt-1">
+                    {formatINR(
+                      brands.reduce((acc, b) => acc + (b.unitsSoldWeekly || 0) * (b.unitPrice || 0) * (b.commissionRate || 0.15), 0)
+                    )}
+                  </div>
+                  <span className="text-[11px] text-slate-400 mt-1 block">Net commissions retained by Alt.Tribe</span>
+                </div>
+                <div className="p-3 bg-emerald-600/10 border border-emerald-500/20 rounded-xl text-emerald-400">
+                  <DollarSign className="w-6 h-6" />
+                </div>
+              </div>
+
+              <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl flex items-center justify-between">
+                <div>
+                  <span className="text-xs text-slate-400">Low Stock Replenishment Priority</span>
+                  <div className="text-xl font-bold text-amber-400 mt-1">{metrics.lowStockCount} Brands</div>
+                  <span className="text-[11px] text-amber-300/80 mt-1 block">Threshold &lt; 5 units on display bay</span>
+                </div>
+                <div className="p-3 bg-amber-600/10 border border-amber-500/20 rounded-xl text-amber-400">
+                  <Package className="w-6 h-6" />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-xl">
+              <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+                <div>
+                  <h2 className="font-semibold text-slate-100 text-sm">Weekly Shelf Velocity & Direct Stock Modifier</h2>
+                  <p className="text-xs text-slate-400">
+                    Use inline controls to log counter POS sales or restock receipts instantly
+                  </p>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-950/60 text-slate-400 font-semibold border-b border-slate-800 uppercase tracking-wider">
+                    <tr>
+                      <th className="py-3 px-4">Brand</th>
+                      <th className="py-3 px-3">Avg Unit Price</th>
+                      <th className="py-3 px-3">Weekly Sales</th>
+                      <th className="py-3 px-3">Gross Revenue (GMV)</th>
+                      <th className="py-3 px-3">Alt.Tribe Commission</th>
+                      <th className="py-3 px-3">Current Stock</th>
+                      <th className="py-3 px-3">Stock Health</th>
+                      <th className="py-3 px-4 text-right">Quick Restock / Sale</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                    {filteredBrands.map((b) => {
+                      const weeklyGMV = (b.unitsSoldWeekly || 0) * (b.unitPrice || 0);
+                      const commissionAmount = weeklyGMV * (b.commissionRate || 0.15);
+                      const isLowStock = b.stockOnHand < 5;
+                      const isOutOfStock = b.stockOnHand === 0;
+
+                      return (
+                        <tr key={b.id} className="hover:bg-slate-800/40 transition-colors">
+                          <td className="py-3 px-4">
+                            <span className="font-medium text-slate-100">{b.name}</span>
+                            <span className="text-[11px] text-slate-400 block">{b.slotId}</span>
+                          </td>
+                          <td className="py-3 px-3 font-mono text-slate-300">{formatINR(b.unitPrice)}</td>
+                          <td className="py-3 px-3 font-semibold text-slate-200">
+                            {b.unitsSoldWeekly} <span className="text-slate-500 font-normal">units</span>
+                          </td>
+                          <td className="py-3 px-3 font-semibold text-emerald-400 font-mono">
+                            {formatINR(weeklyGMV)}
+                          </td>
+                          <td className="py-3 px-3 font-mono text-indigo-300">
+                            {formatINR(commissionAmount)}
+                            <span className="text-[10px] text-slate-500 block font-normal">
+                              ({(b.commissionRate * 100).toFixed(0)}%)
+                            </span>
+                          </td>
+                          <td className="py-3 px-3">
+                            <span className={`font-mono font-bold text-sm ${isOutOfStock ? 'text-rose-500' : isLowStock ? 'text-amber-400' : 'text-slate-200'}`}>
+                              {b.stockOnHand}
+                            </span>
+                            <span className="text-[10px] text-slate-500 block">units in bay</span>
+                          </td>
+                          <td className="py-3 px-3">
+                            {isOutOfStock ? (
+                              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                                OUT OF STOCK
+                              </span>
+                            ) : isLowStock ? (
+                              <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                                LOW STOCK (&lt;5)
+                              </span>
+                            ) : (
+                              <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                HEALTHY
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-3 px-4 text-right">
+                            <div className="flex items-center justify-end gap-1.5">
+                              <button
+                                onClick={() => adjustStock(b.id, -1)}
+                                disabled={b.stockOnHand <= 0}
+                                className="w-7 h-7 flex items-center justify-center rounded bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-slate-200 border border-slate-700 transition-colors"
+                                title="Log 1 Unit Sold (Reduces bay stock, updates weekly GMV)"
+                              >
+                                <Minus className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => adjustStock(b.id, 5)}
+                                className="px-2 py-1 flex items-center gap-1 rounded bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 transition-colors text-xs font-semibold"
+                                title="Restock +5 units"
+                              >
+                                <Plus className="w-3 h-3" />
+                                <span>+5 Restock</span>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 3: BRAND TICKET RESOLUTION DESK */}
+        {activeTab === 'tickets' && (
+          <div className="space-y-4">
+            <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-xl">
+              <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+                <div>
+                  <h2 className="font-semibold text-slate-100 text-sm">Ops Resolution Desk & Brand Support Logs</h2>
+                  <p className="text-xs text-slate-400">
+                    Track shelf maintenance, audit discrepancies, billing disputes, and floor staff assignments
+                  </p>
+                </div>
+                <button
+                  onClick={() => setIsNewTicketOpen(true)}
+                  className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-colors"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Raise Support Ticket</span>
+                </button>
+              </div>
+
+              <div className="divide-y divide-slate-800">
+                {tickets.map((t) => (
+                  <div key={t.id} className="p-4 hover:bg-slate-800/30 transition-colors">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-xs font-bold text-indigo-400">{t.id}</span>
+                        <span className="text-slate-500">•</span>
+                        <span className="font-medium text-slate-200 text-sm">{t.brandName}</span>
+                        <span className="text-[11px] px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300">
+                          {t.category}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2 text-xs">
+                        {/* Urgency Badge */}
+                        <span
+                          className={`px-2 py-0.5 rounded text-[11px] font-semibold border ${
+                            t.urgency === 'Critical'
+                              ? 'bg-rose-500/20 text-rose-300 border-rose-500/40 animate-pulse'
+                              : t.urgency === 'High'
+                              ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                              : t.urgency === 'Medium'
+                              ? 'bg-sky-500/20 text-sky-300 border-sky-500/40'
+                              : 'bg-slate-800 text-slate-400 border-slate-700'
+                          }`}
+                        >
+                          {t.urgency}
+                        </span>
+
+                        {/* Status Select */}
+                        <select
+                          value={t.status}
+                          onChange={(e) => {
+                            const newStatus = e.target.value;
+                            setTickets((prev) =>
+                              prev.map((item) => (item.id === t.id ? { ...item, status: newStatus } : item))
+                            );
+                            triggerNotification(`Ticket ${t.id} marked as ${newStatus}`, 'info');
+                          }}
+                          className={`px-2 py-0.5 rounded text-xs border font-medium bg-slate-950 focus:outline-none ${
+                            t.status === 'Resolved'
+                              ? 'border-emerald-500/50 text-emerald-400'
+                              : t.status === 'In Progress'
+                              ? 'border-amber-500/50 text-amber-300'
+                              : 'border-slate-700 text-slate-300'
+                          }`}
+                        >
+                          <option value="Open">Open</option>
+                          <option value="In Progress">In Progress</option>
+                          <option value="Resolved">Resolved</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <p className="text-xs text-slate-300 mt-2 font-medium">{t.subject}</p>
+
+                    <div className="flex flex-wrap items-center gap-4 text-[11px] text-slate-400 mt-2">
+                      <span>Assignee: <span className="text-slate-200">{t.assignee}</span></span>
+                      <span>Logged: <span className="text-slate-200 font-mono">{t.createdDate}</span></span>
+                      <span>Actionables: <span className="text-slate-200">{t.actionables.filter((a) => a.done).length}/{t.actionables.length} Completed</span></span>
+                    </div>
+
+                    {/* INTERACTIVE ACTIONABLES & NOTES DRAWER */}
+                    <div className="mt-3 pt-3 border-t border-slate-800/70 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                      {/* Actionables Checklist */}
+                      <div className="bg-slate-950/60 p-3 rounded-lg border border-slate-800">
+                        <span className="font-semibold text-slate-300 text-[11px] uppercase tracking-wider block mb-2">
+                          Operational Action Items
+                        </span>
+                        <div className="space-y-1.5">
+                          {t.actionables.map((act) => (
+                            <label
+                              key={act.id}
+                              className="flex items-center gap-2 text-slate-300 hover:text-slate-100 cursor-pointer"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={act.done}
+                                onChange={() => {
+                                  setTickets((prev) =>
+                                    prev.map((tk) => {
+                                      if (tk.id === t.id) {
+                                        return {
+                                          ...tk,
+                                          actionables: tk.actionables.map((a) =>
+                                            a.id === act.id ? { ...a, done: !a.done } : a
+                                          )
+                                        };
+                                      }
+                                      return tk;
+                                    })
+                                  );
+                                }}
+                                className="rounded bg-slate-900 border-slate-700 text-indigo-600 focus:ring-0"
+                              />
+                              <span className={act.done ? 'line-through text-slate-500' : ''}>{act.text}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Notes & Staff Log */}
+                      <div className="bg-slate-950/60 p-3 rounded-lg border border-slate-800 flex flex-col justify-between">
+                        <div>
+                          <span className="font-semibold text-slate-300 text-[11px] uppercase tracking-wider block mb-1.5">
+                            Staff Resolution Log
+                          </span>
+                          <div className="space-y-1.5 max-h-24 overflow-y-auto pr-1">
+                            {t.notes.map((n) => (
+                              <div key={n.id} className="text-[11px] border-b border-slate-800 pb-1">
+                                <span className="font-semibold text-indigo-300">{n.author}</span>{' '}
+                                <span className="text-[10px] text-slate-500 font-mono">({n.time})</span>:
+                                <p className="text-slate-300 mt-0.5">{n.text}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Quick Append Note */}
+                        <div className="mt-2 pt-2 border-t border-slate-800 flex gap-2">
+                          <input
+                            type="text"
+                            placeholder="Add brief internal note..."
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && e.target.value.trim()) {
+                                const newNoteText = e.target.value.trim();
+                                setTickets((prev) =>
+                                  prev.map((tk) => {
+                                    if (tk.id === t.id) {
+                                      return {
+                                        ...tk,
+                                        notes: [
+                                          ...tk.notes,
+                                          {
+                                            id: Date.now(),
+                                            author: 'Current Staff',
+                                            time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+                                            text: newNoteText
+                                          }
+                                        ]
+                                      };
+                                    }
+                                    return tk;
+                                  })
+                                );
+                                e.target.value = '';
+                              }
+                            }}
+                            className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-[11px] text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-indigo-500"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
+
+      {/* --- MODAL 1: ZOHO INVOICE GENERATOR & TAX INVOICE PREVIEW --- */}
+      {invoiceBrand && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full max-h-[92vh] overflow-y-auto shadow-2xl flex flex-col">
+            {/* Modal Header */}
+            <div className="p-4 border-b border-slate-800 flex items-center justify-between sticky top-0 bg-slate-900/95 backdrop-blur z-10">
+              <div className="flex items-center gap-2">
+                <FileText className="w-5 h-5 text-indigo-400" />
+                <h3 className="font-semibold text-slate-100 text-sm">
+                  Zoho Invoice Settlement Preview: {invoiceBrand.name}
+                </h3>
+              </div>
+              <button
+                onClick={() => setInvoiceBrand(null)}
+                className="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-slate-200"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Printable Tax Invoice Container */}
+            <div className="p-6 bg-slate-950 text-slate-200 space-y-6 text-xs font-sans" id="printable-invoice">
+              {/* Top Banner */}
+              <div className="flex justify-between items-start border-b border-slate-800 pb-4">
+                <div>
+                  <h2 className="text-lg font-black tracking-tight text-white">ALT.TRIBE SPACES LLP</h2>
+                  <p className="text-[11px] text-slate-400">104 Indiranagar 100ft Road, Bangalore, KA 560038</p>
+                  <p className="text-[11px] text-slate-400">GSTIN: <span className="font-mono text-slate-300">29AAAAA0000A1Z5</span></p>
+                  <span className="inline-block mt-2 px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                    Zoho Books Auto-Sync: Active (#ZOHO-INV-2026-089)
+                  </span>
+                </div>
+                <div className="text-right">
+                  <div className="text-xs font-mono font-bold text-indigo-400 uppercase tracking-widest">
+                    TAX INVOICE / SETTLEMENT
+                  </div>
+                  <p className="font-mono text-slate-300 text-xs mt-1">#ALT-INV-2026-{invoiceBrand.id.replace('BRD-', '')}</p>
+                  <p className="text-[11px] text-slate-400">Date: {new Date().toLocaleDateString('en-IN')}</p>
+                  <p className="text-[11px] text-slate-400">Due Cutoff: 24th Monthly</p>
+                </div>
+              </div>
+
+              {/* Billed To / Concession Details */}
+              <div className="grid grid-cols-2 gap-4 bg-slate-900/60 p-3.5 rounded-lg border border-slate-800 text-[11px]">
+                <div>
+                  <span className="text-slate-400 uppercase font-semibold text-[10px] block mb-1">Brand Concessionaire:</span>
+                  <div className="font-bold text-slate-100 text-xs">{invoiceBrand.name}</div>
+                  <div className="text-slate-300">{invoiceBrand.contactPerson}</div>
+                  <div className="text-slate-400">{invoiceBrand.contactEmail}</div>
+                  <div className="font-mono text-slate-400 mt-1">GSTIN: {invoiceBrand.gstin}</div>
+                </div>
+                <div>
+                  <span className="text-slate-400 uppercase font-semibold text-[10px] block mb-1">Allotted Floor Bay:</span>
+                  <div className="font-semibold text-indigo-300">{invoiceBrand.slotId}</div>
+                  <div className="text-slate-300">Category: {invoiceBrand.category}</div>
+                  <div className="text-slate-300">Commission Rate: {(invoiceBrand.commissionRate * 100).toFixed(0)}%</div>
+                  <div className="text-amber-400 font-mono mt-1">Status: {invoiceBrand.status}</div>
+                </div>
+              </div>
+
+              {/* Breakdown Ledger Table */}
+              <div>
+                <table className="w-full text-left text-xs border border-slate-800 rounded-lg overflow-hidden">
+                  <thead className="bg-slate-900 text-slate-400 font-semibold border-b border-slate-800 text-[11px]">
+                    <tr>
+                      <th className="py-2.5 px-3">Line Description</th>
+                      <th className="py-2.5 px-3 text-center">HSN/SAC</th>
+                      <th className="py-2.5 px-3 text-right">Rate</th>
+                      <th className="py-2.5 px-3 text-right">Amount (₹)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800 text-slate-300">
+                    {/* Base Rent */}
+                    <tr>
+                      <td className="py-2.5 px-3">
+                        <div className="font-medium text-slate-200">Space Rental & Display Concession Fee</div>
+                        <span className="text-[10px] text-slate-500">Fixed monthly space allocation</span>
+                      </td>
+                      <td className="py-2.5 px-3 text-center font-mono text-slate-400">997212</td>
+                      <td className="py-2.5 px-3 text-right font-mono">{formatINR(invoiceBrand.monthlyRent)}</td>
+                      <td className="py-2.5 px-3 text-right font-mono font-medium">{formatINR(invoiceBrand.monthlyRent)}</td>
+                    </tr>
+
+                    {/* Late Penalty */}
+                    {invoiceBrand.lateFee > 0 && (
+                      <tr className="bg-rose-950/20 text-rose-200">
+                        <td className="py-2.5 px-3">
+                          <div className="font-medium text-rose-300">Recurring 24th Late Renewal Penalty</div>
+                          <span className="text-[10px] text-rose-400/80">Applied for contract renewal pending after the 24th</span>
+                        </td>
+                        <td className="py-2.5 px-3 text-center font-mono text-slate-400">999799</td>
+                        <td className="py-2.5 px-3 text-right font-mono">₹250</td>
+                        <td className="py-2.5 px-3 text-right font-mono font-medium">{formatINR(invoiceBrand.lateFee)}</td>
+                      </tr>
+                    )}
+
+                    {/* Short Notice Removal Penalty */}
+                    {invoiceBrand.emergencyRemovalFee > 0 && (
+                      <tr className="bg-amber-950/20 text-amber-200">
+                        <td className="py-2.5 px-3">
+                          <div className="font-medium text-amber-300">Emergency Bay Removal & Short-Notice Penalty</div>
+                          <span className="text-[10px] text-amber-400/80">
+                            ₹250/day surcharge for exit under mandatory 2-day notice window
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-3 text-center font-mono text-slate-400">999799</td>
+                        <td className="py-2.5 px-3 text-right font-mono">₹250/day</td>
+                        <td className="py-2.5 px-3 text-right font-mono font-medium">{formatINR(invoiceBrand.emergencyRemovalFee)}</td>
+                      </tr>
+                    )}
+
+                    {/* GST on Space & Penalty */}
+                    {(() => {
+                      const totalRentAndPenalties =
+                        invoiceBrand.monthlyRent + (invoiceBrand.lateFee || 0) + (invoiceBrand.emergencyRemovalFee || 0);
+                      const gstRate = 0.18;
+                      const gstAmount = totalRentAndPenalties * gstRate;
+
+                      return (
+                        <>
+                          <tr className="bg-slate-900/40 text-slate-400 text-[11px]">
+                            <td colSpan="3" className="py-2 px-3 text-right">
+                              GST (CGST 9% + SGST 9%) on Space Services
+                            </td>
+                            <td className="py-2 px-3 text-right font-mono text-slate-300">
+                              {formatINR(gstAmount)}
+                            </td>
+                          </tr>
+
+                          <tr className="border-t-2 border-slate-700 font-semibold text-slate-100">
+                            <td colSpan="3" className="py-2.5 px-3 text-right">
+                              Total Alt.Tribe Charges Payable (A):
+                            </td>
+                            <td className="py-2.5 px-3 text-right font-mono text-amber-400">
+                              {formatINR(totalRentAndPenalties + gstAmount)}
+                            </td>
+                          </tr>
+                        </>
+                      );
+                    })()}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Store Sales Offset (Concession Reversal) */}
+              <div className="bg-slate-900/70 p-4 rounded-xl border border-slate-800 space-y-2">
+                <span className="text-[11px] font-bold text-slate-300 uppercase tracking-wider block">
+                  Consignment Store Sales Clearance (Weekly Offset)
+                </span>
+                {(() => {
+                  const grossSales = (invoiceBrand.unitsSoldWeekly || 0) * (invoiceBrand.unitPrice || 0);
+                  const commission = grossSales * (invoiceBrand.commissionRate || 0.15);
+                  const netBrandPayout = grossSales - commission;
+                  const totalAltTribeCharges =
+                    (invoiceBrand.monthlyRent + (invoiceBrand.lateFee || 0) + (invoiceBrand.emergencyRemovalFee || 0)) * 1.18;
+                  const finalBalance = netBrandPayout - totalAltTribeCharges;
+
+                  return (
+                    <div className="space-y-1.5 text-xs">
+                      <div className="flex justify-between text-slate-400">
+                        <span>Physical Store Sales Volume ({invoiceBrand.unitsSoldWeekly} units @ {formatINR(invoiceBrand.unitPrice)}):</span>
+                        <span className="font-mono text-slate-200">{formatINR(grossSales)}</span>
+                      </div>
+                      <div className="flex justify-between text-slate-400">
+                        <span>Less: Alt.Tribe Revenue Commission ({(invoiceBrand.commissionRate * 100).toFixed(0)}%):</span>
+                        <span className="font-mono text-rose-400">- {formatINR(commission)}</span>
+                      </div>
+                      <div className="flex justify-between text-slate-300 font-medium pt-1 border-t border-slate-800">
+                        <span>Net Sales Revenue Retained for Brand (B):</span>
+                        <span className="font-mono text-emerald-400">{formatINR(netBrandPayout)}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-sm font-bold pt-2 border-t border-slate-700">
+                        <span className={finalBalance >= 0 ? 'text-emerald-400' : 'text-rose-400'}>
+                          Net Settlement Balance (B - A):
+                        </span>
+                        <span className={`font-mono text-base ${finalBalance >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                          {finalBalance >= 0 ? `Alt.Tribe Pays Brand: ${formatINR(finalBalance)}` : `Brand Owes Alt.Tribe: ${formatINR(Math.abs(finalBalance))}`}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* Zoho Stamp & Sign */}
+              <div className="flex justify-between items-center text-[10px] text-slate-500 pt-2 border-t border-slate-800">
+                <div>
+                  <p>System verified by Zoho Books Automated Webhook Engine.</p>
+                  <p>In accordance with Section 31 of CGST Act, 2017.</p>
+                </div>
+                <div className="text-right font-mono">
+                  <span>AUTHORIZED SIGNATORY</span>
+                  <p className="text-slate-400 font-sans mt-1">Alt.Tribe Finance Desk</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="p-4 bg-slate-900 border-t border-slate-800 flex items-center justify-between">
+              <span className="text-xs text-slate-400 flex items-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                <span>Payload ready for Zoho Books API batch export</span>
+              </span>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    window.print();
+                  }}
+                  className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-colors"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  <span>Print / Export PDF</span>
+                </button>
+                <button
+                  onClick={() => {
+                    triggerNotification(`Invoice #ALT-INV-2026-${invoiceBrand.id} synced directly to Zoho Books!`, 'success');
+                    setInvoiceBrand(null);
+                  }}
+                  className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg flex items-center gap-1.5 shadow-md shadow-indigo-600/30 transition-colors"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Push to Zoho Books</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- MODAL 2: ADD NEW BRAND --- */}
+      {isAddBrandOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="bg-slate-900 border border-slate-800 rounded-xl max-w-md w-full shadow-2xl p-5">
+            <div className="flex justify-between items-center pb-3 border-b border-slate-800">
+              <h3 className="font-semibold text-slate-100 text-sm">Add New Concession Brand</h3>
+              <button onClick={() => setIsAddBrandOpen(false)} className="text-slate-400 hover:text-slate-200">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const form = e.target;
+                const newBrand = {
+                  id: `BRD-0${brands.length + 1}`,
+                  name: form.brandName.value,
+                  category: form.category.value,
+                  slotId: form.slotId.value,
+                  monthlyRent: Number(form.rent.value) || 6500,
+                  renewalDeadlineDay: 24,
+                  status: 'Active',
+                  lateFee: 0,
+                  shortNoticeDays: 0,
+                  emergencyRemovalFee: 0,
+                  unitsSoldWeekly: 0,
+                  stockOnHand: Number(form.stock.value) || 10,
+                  unitPrice: Number(form.price.value) || 1200,
+                  commissionRate: Number(form.commission.value) / 100 || 0.15,
+                  noticeDate: null,
+                  contactPerson: form.contactPerson.value,
+                  contactEmail: form.contactEmail.value,
+                  gstin: form.gstin.value || '29ABCDE0000Z1'
+                };
+                setBrands((prev) => [...prev, newBrand]);
+                setIsAddBrandOpen(false);
+                triggerNotification(`Brand "${newBrand.name}" boarded to slot ${newBrand.slotId}`, 'success');
+              }}
+              className="space-y-3 mt-4 text-xs"
+            >
+              <div>
+                <label className="text-slate-400 block mb-1">Brand Name</label>
+                <input
+                  required
+                  name="brandName"
+                  placeholder="e.g. Terra Pottery Co."
+                  className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-slate-200 focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-slate-400 block mb-1">Category</label>
+                  <input
+                    required
+                    name="category"
+                    placeholder="e.g. Ceramics"
+                    className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-slate-200 focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="text-slate-400 block mb-1">Floor Bay / Slot ID</label>
+                  <input
+                    required
+                    name="slotId"
+                    placeholder="e.g. Shelf D-02"
+                    className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-slate-200 focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <label className="text-slate-400 block mb-1">Rent (Min ₹6.5k)</label>
+                  <input
+                    type="number"
+                    defaultValue={6500}
+                    min={6500}
+                    name="rent"
+                    className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-slate-200 focus:outline-none focus:border-indigo-500 font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="text-slate-400 block mb-1">Initial Stock</label>
+                  <input
+                    type="number"
+                    defaultValue={15}
+                    name="stock"
+                    className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-slate-200 focus:outline-none focus:border-indigo-500 font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="text-slate-400 block mb-1">Comm (%)</label>
+                  <input
+                    type="number"
+                    defaultValue={15}
+                    name="commission"
+                    className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-slate-200 focus:outline-none focus:border-indigo-500 font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-slate-400 block mb-1">Avg Unit Price (₹)</label>
+                  <input
+                    type="number"
+                    defaultValue={1200}
+                    name="price"
+                    className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-slate-200 focus:outline-none focus:border-indigo-500 font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="text-slate-400 block mb-1">GSTIN</label>
+                  <input
+                    name="gstin"
+                    placeholder="29XXXXX0000X1Z5"
+                    className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-slate-200 focus:outline-none focus:border-indigo-500 font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-slate-400 block mb-1">Contact Person</label>
+                  <input
+                    name="contactPerson"
+                    placeholder="Founder Name"
+                    className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-slate-200 focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="text-slate-400 block mb-1">Contact Email</label>
+                  <input
+                    type="email"
+                    name="contactEmail"
+                    placeholder="team@brand.com"
+                    className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-slate-200 focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-slate-800 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsAddBrandOpen(false)}
+                  className="px-3 py-1.5 bg-slate-800 text-slate-300 rounded hover:bg-slate-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 bg-indigo-600 text-white font-semibold rounded hover:bg-indigo-500"
+                >
+                  Onboard Brand
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* --- MODAL 3: RAISE NEW TICKET --- */}
+      {isNewTicketOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="bg-slate-900 border border-slate-800 rounded-xl max-w-md w-full shadow-2xl p-5">
+            <div className="flex justify-between items-center pb-3 border-b border-slate-800">
+              <h3 className="font-semibold text-slate-100 text-sm">Raise Floor Support Ticket</h3>
+              <button onClick={() => setIsNewTicketOpen(false)} className="text-slate-400 hover:text-slate-200">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const form = e.target;
+                const chosenBrand = brands.find((b) => b.id === form.brandId.value);
+                const newTk = {
+                  id: `ALT-TK-${100 + tickets.length + 1}`,
+                  brandId: chosenBrand.id,
+                  brandName: chosenBrand.name,
+                  category: form.category.value,
+                  urgency: form.urgency.value,
+                  subject: form.subject.value,
+                  assignee: form.assignee.value,
+                  status: 'Open',
+                  createdDate: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+                  actionables: [
+                    { id: 1, text: 'Initial physical check on designated shelf bay', done: false },
+                    { id: 2, text: 'Resolve and log root cause', done: false }
+                  ],
+                  notes: [
+                    {
+                      id: 1,
+                      author: form.assignee.value,
+                      time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+                      text: `Ticket logged: ${form.subject.value}`
+                    }
+                  ]
+                };
+                setTickets((prev) => [newTk, ...prev]);
+                setIsNewTicketOpen(false);
+                triggerNotification(`Support Ticket ${newTk.id} issued to ${newTk.assignee}`, 'info');
+              }}
+              className="space-y-3 mt-4 text-xs"
+            >
+              <div>
+                <label className="text-slate-400 block mb-1">Concerned Brand</label>
+                <select
+                  required
+                  name="brandId"
+                  className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-slate-200 focus:outline-none focus:border-indigo-500"
+                >
+                  {brands.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.name} ({b.slotId})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-slate-400 block mb-1">Issue Category</label>
+                <select
+                  name="category"
+                  className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-slate-200 focus:outline-none focus:border-indigo-500"
+                >
+                  <option value="Display Maintenance">Display Maintenance</option>
+                  <option value="Rent/Billing">Rent/Billing Dispute</option>
+                  <option value="Restock Discrepancy">Restock Discrepancy</option>
+                  <option value="Damage/Loss">Damage / Floor Shrinkage</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-slate-400 block mb-1">Urgency</label>
+                  <select
+                    name="urgency"
+                    className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-slate-200 focus:outline-none focus:border-indigo-500"
+                  >
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                    <option value="Critical">Critical</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-slate-400 block mb-1">Assigned Staff</label>
+                  <select
+                    name="assignee"
+                    className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-slate-200 focus:outline-none focus:border-indigo-500"
+                  >
+                    <option value="Floor Lead (Vikram)">Floor Lead (Vikram)</option>
+                    <option value="Ops Specialist (Rohan)">Ops Specialist (Rohan)</option>
+                    <option value="Accounts (Pooja)">Accounts (Pooja)</option>
+                    <option value="Inventory Manager (Kavita)">Inventory Manager (Kavita)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-slate-400 block mb-1">Subject / Root Issue</label>
+                <textarea
+                  required
+                  rows={3}
+                  name="subject"
+                  placeholder="Describe the operational discrepancy or floor event..."
+                  className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-slate-200 focus:outline-none focus:border-indigo-500"
+                ></textarea>
+              </div>
+
+              <div className="pt-3 border-t border-slate-800 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsNewTicketOpen(false)}
+                  className="px-3 py-1.5 bg-slate-800 text-slate-300 rounded hover:bg-slate-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 bg-indigo-600 text-white font-semibold rounded hover:bg-indigo-500"
+                >
+                  Create Ticket
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* FOOTER */}
+      <footer className="border-t border-slate-900 bg-slate-950 py-4 text-center text-xs text-slate-500">
+        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+          <span>Alt.Tribe Retail Technologies • Production Ops Engine v3.4</span>
+          <span className="font-mono text-slate-400">Bangalore Store #01 • Indian Rupee (INR) Enforced</span>
+        </div>
+      </footer>
+    </div>
+  );
+}

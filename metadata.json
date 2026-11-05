@@ -1,0 +1,8 @@
+{
+  "name": "Alt.Tribe - Retail Ops Engine",
+  "description": "Retail operations, concession brand management, renewal auditing, inventory velocity, and Zoho invoice settlement engine for Alt.Tribe concept spaces.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
