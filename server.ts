@@ -43,6 +43,10 @@ function loadPersistedState() {
           return {
             ...b,
             contactPhone: b.contactPhone || initMatch?.contactPhone || '+91 98450 12345',
+            autoRenew:
+              typeof b.autoRenew === 'boolean'
+                ? b.autoRenew
+                : (initMatch?.autoRenew ?? false),
           };
         });
       }
@@ -158,6 +162,17 @@ function handleWebSocketMessage(msg: { type: string; payload: any }, ws: WebSock
       brandsState = mergeBrand(brandsState, brand);
       savePersistedState();
       broadcast({ type: 'brand:updated', payload: brand }, ws);
+      break;
+    }
+
+    case 'brand:auto_renew_toggled': {
+      const { id, autoRenew } = msg.payload;
+      const existing = brandsState.find((b) => b.id === id);
+      if (existing) {
+        existing.autoRenew = Boolean(autoRenew);
+        savePersistedState();
+        broadcast({ type: 'brand:auto_renew_toggled', payload: { id, autoRenew: existing.autoRenew } }, ws);
+      }
       break;
     }
 

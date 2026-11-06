@@ -22,6 +22,7 @@ export interface Brand {
   contactEmail: string;
   contactPhone?: string;
   gstin: string;
+  autoRenew?: boolean;
 }
 
 export type ExpiryUrgency = 'safe' | 'warning' | 'critical' | 'expired';

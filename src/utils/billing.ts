@@ -128,15 +128,103 @@ export const calculateShortNoticePenalty = (
 };
 
 /**
+ * Toggles or sets the autoRenew boolean flag for a specific brand ID.
+ */
+export const toggleBrandAutoRenew = (
+  brands: Brand[],
+  brandId: string,
+  explicitValue?: boolean
+): { updatedBrands: Brand[]; updatedBrand?: Brand } => {
+  let updatedBrand: Brand | undefined;
+  const updatedBrands = brands.map((b) => {
+    if (b.id === brandId) {
+      const nextAutoRenew = explicitValue !== undefined ? explicitValue : !Boolean(b.autoRenew);
+      updatedBrand = {
+        ...b,
+        autoRenew: nextAutoRenew,
+      };
+      return updatedBrand;
+    }
+    return b;
+  });
+  return { updatedBrands, updatedBrand };
+};
+
+/**
+ * Processes automated renewals for all eligible brands that have `autoRenew: true`
+ * and are either Overdue, in Grace Period, Expired, or Expiring within 7 days.
+ */
+export const processAutoRenewals = (
+  brands: Brand[],
+  referenceDate: Date = new Date('2026-11-05T00:00:00')
+): { updatedBrands: Brand[]; renewedBrandNames: string[] } => {
+  const renewedBrandNames: string[] = [];
+
+  const updatedBrands = brands.map((b) => {
+    if (!b.autoRenew || b.status === 'Discontinued' || b.status === 'Notice Served') {
+      return b;
+    }
+
+    const expiryInfo = getContractExpiryInfo(b, referenceDate);
+    const needsRenewal =
+      b.status === 'Overdue' ||
+      b.status === 'Grace Period' ||
+      expiryInfo.isExpiringSoon ||
+      expiryInfo.isExpired;
+
+    if (needsRenewal) {
+      const currentEnd = b.agreementEndDate ? parseLocalDate(b.agreementEndDate) : referenceDate;
+      const baseDate = currentEnd < referenceDate ? referenceDate : currentEnd;
+      const nextEnd = new Date(baseDate.getTime() + 30 * 24 * 60 * 60 * 1000);
+      const yyyy = nextEnd.getFullYear();
+      const mm = String(nextEnd.getMonth() + 1).padStart(2, '0');
+      const dd = String(nextEnd.getDate()).padStart(2, '0');
+      const nextEndStr = `${yyyy}-${mm}-${dd}`;
+
+      renewedBrandNames.push(b.name);
+      return {
+        ...b,
+        status: 'Active' as const,
+        lateFee: 0,
+        agreementEndDate: nextEndStr,
+      };
+    }
+
+    return b;
+  });
+
+  return { updatedBrands, renewedBrandNames };
+};
+
+/**
  * Evaluates brands against the 24th cutoff monthly rule.
- * If status is Overdue or Grace Period, applies ₹250 penalty flag if not already charged.
+ * - If a brand in Overdue or Grace Period has `autoRenew: true`, it automatically renews for 30 days with 0 penalty.
+ * - Otherwise, if status is Overdue or Grace Period, applies ₹250 penalty flag if not already charged.
  */
 export const evaluate24thRenewalAudit = (
   brands: Brand[]
-): { updatedBrands: Brand[]; newPenaltyCount: number } => {
+): { updatedBrands: Brand[]; newPenaltyCount: number; autoRenewedCount: number } => {
   let newPenaltyCount = 0;
+  let autoRenewedCount = 0;
   const updatedBrands = brands.map((b) => {
     if (b.status === 'Overdue' || b.status === 'Grace Period') {
+      if (b.autoRenew) {
+        autoRenewedCount++;
+        const currentEnd = b.agreementEndDate
+          ? parseLocalDate(b.agreementEndDate)
+          : new Date(2026, 10, 5);
+        const nextEnd = new Date(currentEnd.getTime() + 30 * 24 * 60 * 60 * 1000);
+        const yyyy = nextEnd.getFullYear();
+        const mm = String(nextEnd.getMonth() + 1).padStart(2, '0');
+        const dd = String(nextEnd.getDate()).padStart(2, '0');
+        return {
+          ...b,
+          status: 'Active' as const,
+          lateFee: 0,
+          agreementEndDate: `${yyyy}-${mm}-${dd}`,
+        };
+      }
+
       const isFirstTimePenalty = b.lateFee === 0;
       if (isFirstTimePenalty) {
         newPenaltyCount++;
@@ -150,7 +238,7 @@ export const evaluate24thRenewalAudit = (
     return b;
   });
 
-  return { updatedBrands, newPenaltyCount };
+  return { updatedBrands, newPenaltyCount, autoRenewedCount };
 };
 
 /**

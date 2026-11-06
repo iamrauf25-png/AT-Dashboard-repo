@@ -216,7 +216,13 @@ test('generateZPL formats valid thermal printer string', () => {
   assert.equal(zpl.includes('^XZ'), true);
 });
 
-import { getContractExpiryInfo, parseLocalDate, calculateDaysBetween } from './billing';
+import {
+  getContractExpiryInfo,
+  parseLocalDate,
+  calculateDaysBetween,
+  toggleBrandAutoRenew,
+  processAutoRenewals,
+} from './billing';
 
 test('getContractExpiryInfo accurately flags brands with less than 7 days remaining', () => {
   const refDate = new Date(2026, 10, 5); // 05 Nov 2026
@@ -266,4 +272,99 @@ test('getContractExpiryInfo accurately flags brands with less than 7 days remain
   assert.equal(infoExpired.isExpired, true);
   assert.equal(infoExpired.urgency, 'expired');
 });
+
+test('toggleBrandAutoRenew toggles and sets autoRenew boolean field accurately', () => {
+  const sample: Brand[] = [
+    {
+      id: 'BRD-01',
+      name: 'Brand Alpha',
+      category: 'Decor',
+      slotId: 'Shelf A',
+      monthlyRent: 6500,
+      renewalDeadlineDay: 24,
+      status: 'Active',
+      lateFee: 0,
+      shortNoticeDays: 0,
+      emergencyRemovalFee: 0,
+      unitsSoldWeekly: 10,
+      stockOnHand: 10,
+      unitPrice: 1000,
+      commissionRate: 0.15,
+      noticeDate: null,
+      contactPerson: 'Founder A',
+      contactEmail: 'a@brand.in',
+      gstin: '29AAA',
+      autoRenew: false,
+    },
+  ];
+
+  const toggledOn = toggleBrandAutoRenew(sample, 'BRD-01');
+  assert.equal(toggledOn.updatedBrands[0].autoRenew, true);
+  assert.equal(toggledOn.updatedBrand?.autoRenew, true);
+
+  const toggledOff = toggleBrandAutoRenew(toggledOn.updatedBrands, 'BRD-01');
+  assert.equal(toggledOff.updatedBrands[0].autoRenew, false);
+
+  const explicitTrue = toggleBrandAutoRenew(toggledOff.updatedBrands, 'BRD-01', true);
+  assert.equal(explicitTrue.updatedBrands[0].autoRenew, true);
+});
+
+test('processAutoRenewals automatically renews eligible brands with autoRenew enabled', () => {
+  const refDate = new Date(2026, 10, 5); // 05 Nov 2026
+  const sample: Brand[] = [
+    {
+      id: 'BRD-01',
+      name: 'Auto Expiring Brand',
+      category: 'Apparel',
+      slotId: 'Rack A-01',
+      monthlyRent: 8500,
+      renewalDeadlineDay: 24,
+      agreementEndDate: '2026-11-09', // 4 days left (< 7d)
+      status: 'Active',
+      lateFee: 0,
+      shortNoticeDays: 0,
+      emergencyRemovalFee: 0,
+      unitsSoldWeekly: 20,
+      stockOnHand: 15,
+      unitPrice: 2000,
+      commissionRate: 0.15,
+      noticeDate: null,
+      contactPerson: 'Founder 1',
+      contactEmail: 'f1@brand.in',
+      gstin: '29AAA',
+      autoRenew: true,
+    },
+    {
+      id: 'BRD-02',
+      name: 'Manual Overdue Brand',
+      category: 'Skincare',
+      slotId: 'Aisle S-02',
+      monthlyRent: 6500,
+      renewalDeadlineDay: 24,
+      agreementEndDate: '2026-11-04',
+      status: 'Overdue',
+      lateFee: 250,
+      shortNoticeDays: 0,
+      emergencyRemovalFee: 0,
+      unitsSoldWeekly: 15,
+      stockOnHand: 8,
+      unitPrice: 900,
+      commissionRate: 0.18,
+      noticeDate: null,
+      contactPerson: 'Founder 2',
+      contactEmail: 'f2@brand.in',
+      gstin: '29BBB',
+      autoRenew: false,
+    },
+  ];
+
+  const { updatedBrands, renewedBrandNames } = processAutoRenewals(sample, refDate);
+  assert.deepEqual(renewedBrandNames, ['Auto Expiring Brand']);
+  assert.equal(updatedBrands[0].agreementEndDate, '2026-12-09');
+  assert.equal(updatedBrands[0].status, 'Active');
+  // Manual brand remains untouched
+  assert.equal(updatedBrands[1].status, 'Overdue');
+  assert.equal(updatedBrands[1].agreementEndDate, '2026-11-04');
+});
+
 

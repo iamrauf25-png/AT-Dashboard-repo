@@ -19,6 +19,7 @@ import {
   FileSpreadsheet,
   Download,
   MessageCircle,
+  RefreshCw,
 } from 'lucide-react';
 import { Brand } from '../types/index';
 import { formatINR, calculateTotalPenalty, getContractExpiryInfo } from '../utils/billing';
@@ -33,6 +34,8 @@ interface RenewalsTabProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
   onRenewBrand: (brandId: string) => void;
+  onToggleAutoRenew?: (brandId: string, nextValue?: boolean) => void;
+  onRunAutoRenewals?: () => void;
   onOpenVacateModal: (brand: Brand) => void;
   onOpenInvoiceModal: (brand: Brand) => void;
   onSendRenewalReminders?: (brandNames: string[]) => void;
@@ -45,6 +48,8 @@ export const RenewalsTab: React.FC<RenewalsTabProps> = ({
   searchQuery,
   onSearchChange,
   onRenewBrand,
+  onToggleAutoRenew,
+  onRunAutoRenewals,
   onOpenVacateModal,
   onOpenInvoiceModal,
   onSendRenewalReminders,
@@ -52,7 +57,7 @@ export const RenewalsTab: React.FC<RenewalsTabProps> = ({
 }) => {
   // Reference date matching system local date (November 5, 2026)
   const referenceDate = useMemo(() => new Date('2026-11-05T00:00:00'), []);
-  const [filterMode, setFilterMode] = useState<'all' | 'expiring' | 'overdue' | 'active'>('all');
+  const [filterMode, setFilterMode] = useState<'all' | 'expiring' | 'overdue' | 'active' | 'autoRenew'>('all');
   const [sortField, setSortField] = useState<SortField>('default');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [whatsAppBrand, setWhatsAppBrand] = useState<Brand | null>(null);
@@ -71,6 +76,11 @@ export const RenewalsTab: React.FC<RenewalsTabProps> = ({
     return brands.filter((b) => b.status === 'Overdue');
   }, [brands]);
 
+  // Brands with Auto-Renew enabled
+  const autoRenewBrands = useMemo(() => {
+    return brands.filter((b) => Boolean(b.autoRenew) && b.status !== 'Discontinued');
+  }, [brands]);
+
   // Filtered brands applying both the search query and the active quick filter pill
   const filteredList = useMemo(() => {
     return filteredBrands.filter((b) => {
@@ -84,6 +94,9 @@ export const RenewalsTab: React.FC<RenewalsTabProps> = ({
       }
       if (filterMode === 'active') {
         return b.status === 'Active' || b.status === 'Grace Period';
+      }
+      if (filterMode === 'autoRenew') {
+        return Boolean(b.autoRenew);
       }
       return true;
     });
@@ -257,6 +270,20 @@ export const RenewalsTab: React.FC<RenewalsTabProps> = ({
             Overdue ({overdueBrands.length})
           </button>
 
+          <button
+            type="button"
+            onClick={() => setFilterMode(filterMode === 'autoRenew' ? 'all' : 'autoRenew')}
+            className={`px-3 py-1 rounded-xl font-semibold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
+              filterMode === 'autoRenew'
+                ? 'bg-pink-600 text-white shadow-xs'
+                : 'bg-pink-50/70 text-pink-800 hover:bg-pink-100 border border-pink-200'
+            }`}
+            title="Filter brands with Automated Renewal enabled"
+          >
+            <RefreshCw className="w-3 h-3 shrink-0" />
+            <span>Auto-Renew ({autoRenewBrands.length})</span>
+          </button>
+
           <div className="h-4 w-px bg-pink-200 hidden sm:block mx-1"></div>
 
           <motion.button
@@ -408,6 +435,20 @@ export const RenewalsTab: React.FC<RenewalsTabProps> = ({
             <span className="text-xs text-pink-700 font-semibold bg-pink-50 px-3 py-1 rounded-full border border-pink-200 shrink-0">
               Showing {displayedBrands.length} of {brands.length} Brands
             </span>
+            {onRunAutoRenewals && (
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                type="button"
+                onClick={onRunAutoRenewals}
+                className="flex items-center gap-1.5 px-3 py-1 bg-pink-50 hover:bg-pink-100 text-pink-800 border border-pink-300 rounded-full font-bold text-xs shadow-2xs transition-all cursor-pointer shrink-0"
+                title="Run automated renewal processing for eligible Auto-Renew brands"
+                aria-label="Process Auto-Renewals"
+              >
+                <RefreshCw className="w-3.5 h-3.5 text-pink-600 shrink-0" />
+                <span>Process Auto-Renewals</span>
+              </motion.button>
+            )}
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -472,6 +513,7 @@ export const RenewalsTab: React.FC<RenewalsTabProps> = ({
                   </button>
                 </th>
 
+                <th scope="col" className="py-3 px-3">Auto-Renew</th>
                 <th scope="col" className="py-3 px-3">Status</th>
                 <th scope="col" className="py-3 px-3">Penalties Accrued</th>
                 <th scope="col" className="py-3 px-3">Discontinuation Info</th>
@@ -481,7 +523,7 @@ export const RenewalsTab: React.FC<RenewalsTabProps> = ({
             <tbody className="divide-y divide-pink-50 text-slate-700">
               {displayedBrands.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-8 text-center text-slate-400">
+                  <td colSpan={9} className="py-8 text-center text-slate-400">
                     No brands match the selected criteria.
                   </td>
                 </tr>
@@ -614,6 +656,61 @@ export const RenewalsTab: React.FC<RenewalsTabProps> = ({
                             {expiryInfo.daysRemaining} days remaining
                           </span>
                         )}
+                      </td>
+
+                      {/* Auto-Renew Toggle Switch */}
+                      <td className="py-3 px-3">
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            role="switch"
+                            aria-checked={Boolean(b.autoRenew)}
+                            aria-label={`Toggle Auto-Renew for ${b.name}`}
+                            disabled={b.status === 'Discontinued'}
+                            onClick={() => onToggleAutoRenew && onToggleAutoRenew(b.id, !Boolean(b.autoRenew))}
+                            className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full border transition-colors duration-200 focus:outline-none ${
+                              b.status === 'Discontinued'
+                                ? 'bg-slate-100 border-slate-200 cursor-not-allowed opacity-50'
+                                : Boolean(b.autoRenew)
+                                ? 'bg-gradient-to-r from-pink-500 to-rose-500 border-pink-600 cursor-pointer shadow-2xs shadow-pink-200'
+                                : 'bg-slate-200 border-slate-300 hover:bg-pink-100 cursor-pointer'
+                            }`}
+                            title={
+                              b.status === 'Discontinued'
+                                ? 'Auto-Renew unavailable for discontinued agreements'
+                                : Boolean(b.autoRenew)
+                                ? 'Auto-Renew is ON: Contract will automatically extend by 30 days on cutoff'
+                                : 'Auto-Renew is OFF: Click to enable automated 30-day renewal processing'
+                            }
+                          >
+                            <span
+                              className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow-xs transition-transform duration-200 ${
+                                Boolean(b.autoRenew) ? 'translate-x-4' : 'translate-x-0.5'
+                              }`}
+                            />
+                          </button>
+
+                          <div className="flex flex-col">
+                            {b.status === 'Discontinued' ? (
+                              <span className="text-[10px] font-medium text-slate-400">Closed</span>
+                            ) : Boolean(b.autoRenew) ? (
+                              <>
+                                <span className="text-[11px] font-bold text-pink-700 flex items-center gap-0.5 leading-tight">
+                                  <RefreshCw className="w-2.5 h-2.5 text-pink-600 shrink-0" />
+                                  <span>Auto ON</span>
+                                </span>
+                                <span className="text-[9px] text-slate-400 leading-tight">30d cycle</span>
+                              </>
+                            ) : (
+                              <>
+                                <span className="text-[11px] font-medium text-slate-500 leading-tight">
+                                  Manual
+                                </span>
+                                <span className="text-[9px] text-slate-400 leading-tight">Off</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
                       </td>
 
                       {/* Status */}

@@ -20,7 +20,9 @@
       "noticeDate": null,
       "contactPerson": "Aditi Sharma",
       "contactEmail": "aditi@kalakriti.in",
-      "gstin": "29ABCDE1234F1Z5"
+      "gstin": "29ABCDE1234F1Z5",
+      "contactPhone": "+919845012345",
+      "autoRenew": true
     },
     {
       "id": "BRD-02",
@@ -42,7 +44,9 @@
       "noticeDate": null,
       "contactPerson": "Dr. Nikhil Rao",
       "contactEmail": "nikhil@vedaearth.co",
-      "gstin": "29FGHIJ5678K2Z3"
+      "gstin": "29FGHIJ5678K2Z3",
+      "contactPhone": "+919886023456",
+      "autoRenew": true
     },
     {
       "id": "BRD-03",
@@ -64,7 +68,9 @@
       "noticeDate": null,
       "contactPerson": "Meera Nambiar",
       "contactEmail": "meera@urbankhadi.com",
-      "gstin": "29KLMNO9012P3Z7"
+      "gstin": "29KLMNO9012P3Z7",
+      "contactPhone": "+919845534567",
+      "autoRenew": true
     },
     {
       "id": "BRD-04",
@@ -86,7 +92,9 @@
       "noticeDate": null,
       "contactPerson": "Clyde D’Souza",
       "contactEmail": "clyde@goaroastery.in",
-      "gstin": "30QRSTU3456V4Z9"
+      "gstin": "30QRSTU3456V4Z9",
+      "contactPhone": "+919823045678",
+      "autoRenew": false
     },
     {
       "id": "BRD-05",
@@ -108,7 +116,9 @@
       "noticeDate": "2026-11-03",
       "contactPerson": "Saurabh Jain",
       "contactEmail": "saurabh@mittisoul.in",
-      "gstin": "29WXYZ7890A5Z1"
+      "gstin": "29WXYZ7890A5Z1",
+      "contactPhone": "+919741056789",
+      "autoRenew": false
     },
     {
       "id": "BRD-06",
@@ -130,7 +140,9 @@
       "noticeDate": null,
       "contactPerson": "Ritu Varma",
       "contactEmail": "ritu@neevliving.com",
-      "gstin": "29BCDEF4321G6Z8"
+      "gstin": "29BCDEF4321G6Z8",
+      "contactPhone": "+919811067890",
+      "autoRenew": true
     },
     {
       "id": "BRD-07",
@@ -152,7 +164,9 @@
       "noticeDate": "2026-11-01",
       "contactPerson": "Kabir Sen",
       "contactEmail": "kabir@chaicollective.in",
-      "gstin": "29GHIJK8765L7Z2"
+      "gstin": "29GHIJK8765L7Z2",
+      "contactPhone": "+919830078901",
+      "autoRenew": false
     },
     {
       "name": "Zari & Silk Studio",
@@ -174,7 +188,9 @@
       "contactPerson": "Rupal Shah",
       "contactEmail": "rupal@zarisilk.in",
       "gstin": "29ZZZZZ1111Z1",
-      "id": "BRD-08"
+      "id": "BRD-08",
+      "contactPhone": "+91 98450 12345",
+      "autoRenew": false
     }
   ],
   "tickets": [
@@ -308,5 +324,5 @@
       ]
     }
   ],
-  "lastSaved": "2026-11-05T20:33:51.411Z"
+  "lastSaved": "2026-11-05T20:50:53.761Z"
 }

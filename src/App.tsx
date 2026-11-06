@@ -11,6 +11,7 @@ import {
   calculateShortNoticePenalty,
   calculateTotalPenalty,
   getContractExpiryInfo,
+  processAutoRenewals,
 } from './utils/billing';
 import { useRealtimeSync } from './services/realtimeSync';
 import { Header } from './components/Header';
@@ -64,6 +65,7 @@ export default function App() {
     activeClients,
     addBrand,
     renewBrand,
+    toggleAutoRenew,
     vacateBrand,
     adjustStock,
     audit24th,
@@ -100,10 +102,10 @@ export default function App() {
 
   // --- PENALTY CHECK ENGINE (24TH OF MONTH RULE) ---
   const handleRunPenaltyCheck = () => {
-    const { updatedBrands, newPenaltyCount } = evaluate24thRenewalAudit(brands);
+    const { updatedBrands, newPenaltyCount, autoRenewedCount } = evaluate24thRenewalAudit(brands);
     audit24th(updatedBrands);
     triggerNotification(
-      `24th Cycle Audit Complete: Evaluated ${brands.length} brand contracts. ${newPenaltyCount} new ₹250 penalty flags applied.`,
+      `24th Cycle Audit Complete: Evaluated ${brands.length} contracts (${autoRenewedCount} auto-renewed, ${newPenaltyCount} new ₹250 penalty flags applied).`,
       newPenaltyCount > 0 ? 'warning' : 'success'
     );
   };
@@ -112,6 +114,39 @@ export default function App() {
   const handleRenewBrand = (id: string) => {
     renewBrand(id);
     triggerNotification('Brand agreement successfully renewed for 30 days. Penalties cleared.', 'success');
+  };
+
+  const handleToggleAutoRenew = (brandId: string, nextValue?: boolean) => {
+    const target = brands.find((b) => b.id === brandId);
+    const resolved = nextValue !== undefined ? nextValue : !Boolean(target?.autoRenew);
+    toggleAutoRenew(brandId, resolved);
+    if (target) {
+      triggerNotification(
+        resolved
+          ? `Auto-Renew enabled for ${target.name} — contract will automatically extend by 30 days on cycle cutoff.`
+          : `Auto-Renew disabled for ${target.name} — switched to manual renewal approval.`,
+        resolved ? 'success' : 'info'
+      );
+    }
+  };
+
+  const handleRunAutoRenewals = () => {
+    const { updatedBrands, renewedBrandNames } = processAutoRenewals(
+      brands,
+      new Date('2026-11-05T00:00:00')
+    );
+    if (renewedBrandNames.length > 0) {
+      audit24th(updatedBrands);
+      triggerNotification(
+        `Automated Renewal Processed: Extended 30-day cycle for ${renewedBrandNames.join(', ')}.`,
+        'success'
+      );
+    } else {
+      triggerNotification(
+        'No Auto-Renew enabled brands currently require renewal (< 7d or Overdue).',
+        'info'
+      );
+    }
   };
 
   const handleSendRenewalReminders = (brandNames: string[]) => {
@@ -203,6 +238,8 @@ export default function App() {
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
               onRenewBrand={handleRenewBrand}
+              onToggleAutoRenew={handleToggleAutoRenew}
+              onRunAutoRenewals={handleRunAutoRenewals}
               onOpenVacateModal={setBrandToVacate}
               onOpenInvoiceModal={setInvoiceBrand}
               onSendRenewalReminders={handleSendRenewalReminders}

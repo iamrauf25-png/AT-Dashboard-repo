@@ -23,6 +23,7 @@ export const INITIAL_BRANDS: Brand[] = [
     contactEmail: 'aditi@kalakriti.in',
     contactPhone: '+919845012345',
     gstin: '29ABCDE1234F1Z5',
+    autoRenew: true,
   },
   {
     id: 'BRD-02',
@@ -46,6 +47,7 @@ export const INITIAL_BRANDS: Brand[] = [
     contactEmail: 'nikhil@vedaearth.co',
     contactPhone: '+919886023456',
     gstin: '29FGHIJ5678K2Z3',
+    autoRenew: false,
   },
   {
     id: 'BRD-03',
@@ -69,6 +71,7 @@ export const INITIAL_BRANDS: Brand[] = [
     contactEmail: 'meera@urbankhadi.com',
     contactPhone: '+919845534567',
     gstin: '29KLMNO9012P3Z7',
+    autoRenew: true,
   },
   {
     id: 'BRD-04',
@@ -92,6 +95,7 @@ export const INITIAL_BRANDS: Brand[] = [
     contactEmail: 'clyde@goaroastery.in',
     contactPhone: '+919823045678',
     gstin: '30QRSTU3456V4Z9',
+    autoRenew: false,
   },
   {
     id: 'BRD-05',
@@ -115,6 +119,7 @@ export const INITIAL_BRANDS: Brand[] = [
     contactEmail: 'saurabh@mittisoul.in',
     contactPhone: '+919741056789',
     gstin: '29WXYZ7890A5Z1',
+    autoRenew: false,
   },
   {
     id: 'BRD-06',
@@ -138,6 +143,7 @@ export const INITIAL_BRANDS: Brand[] = [
     contactEmail: 'ritu@neevliving.com',
     contactPhone: '+919811067890',
     gstin: '29BCDEF4321G6Z8',
+    autoRenew: true,
   },
   {
     id: 'BRD-07',
@@ -161,6 +167,7 @@ export const INITIAL_BRANDS: Brand[] = [
     contactEmail: 'kabir@chaicollective.in',
     contactPhone: '+919830078901',
     gstin: '29GHIJK8765L7Z2',
+    autoRenew: false,
   },
 ];
 

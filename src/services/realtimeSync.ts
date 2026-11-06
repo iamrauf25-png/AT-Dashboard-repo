@@ -126,6 +126,14 @@ export function useRealtimeSync(
           break;
         }
 
+        case 'brand:auto_renew_toggled': {
+          const { id, autoRenew } = msg.payload;
+          setBrands((prev) =>
+            prev.map((b) => (b.id === id ? { ...b, autoRenew: Boolean(autoRenew) } : b))
+          );
+          break;
+        }
+
         case 'brand:renewed': {
           const { id, agreementEndDate } = msg.payload;
           setBrands((prev) =>
@@ -566,6 +574,33 @@ export function useRealtimeSync(
     [broadcastOut]
   );
 
+  const toggleAutoRenew = useCallback(
+    (brandId: string, nextValue?: boolean) => {
+      const target = brands.find((b) => b.id === brandId);
+      const resolvedValue = nextValue !== undefined ? nextValue : !Boolean(target?.autoRenew);
+
+      setBrands((prev) =>
+        prev.map((b) =>
+          b.id === brandId
+            ? {
+                ...b,
+                autoRenew: resolvedValue,
+              }
+            : b
+        )
+      );
+
+      broadcastOut('brand:auto_renew_toggled', { id: brandId, autoRenew: resolvedValue });
+
+      fetch(`/api/brands/${brandId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ autoRenew: resolvedValue }),
+      }).catch((e) => console.warn('REST autoRenew backup error:', e));
+    },
+    [brands, broadcastOut]
+  );
+
   return {
     brands,
     tickets,
@@ -573,6 +608,7 @@ export function useRealtimeSync(
     activeClients,
     addBrand,
     renewBrand,
+    toggleAutoRenew,
     vacateBrand,
     adjustStock,
     audit24th,

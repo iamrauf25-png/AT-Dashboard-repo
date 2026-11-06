@@ -26,6 +26,7 @@ export const AddBrandModal: React.FC<AddBrandModalProps> = ({
   const [gstin, setGstin] = useState('');
   const [contactPerson, setContactPerson] = useState('');
   const [contactEmail, setContactEmail] = useState('');
+  const [autoRenew, setAutoRenew] = useState(true);
 
   if (!isOpen) return null;
 
@@ -52,6 +53,7 @@ export const AddBrandModal: React.FC<AddBrandModalProps> = ({
       contactPerson: contactPerson.trim() || 'Store Manager',
       contactEmail: contactEmail.trim() || 'contact@brand.com',
       gstin: gstin.trim() || '29ABCDE0000Z1',
+      autoRenew,
     };
 
     onAddBrand(newBrand);
