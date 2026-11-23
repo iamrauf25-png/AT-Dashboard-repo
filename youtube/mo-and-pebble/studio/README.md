@@ -7,9 +7,9 @@ There are no image, sound or music assets, so there's nothing to license.
 | File | Job |
 | --- | --- |
 | `shorts.py` | The shot list for every Short: lines, camera moves, character actions, sound effects |
-| `audio.py` | Voices (Kokoro TTS, pitched per character), SFX, crickets, music → `audio.wav` + `timeline.json` |
+| `../../engine/audio.py` | Voices (Kokoro TTS, pitched per character), SFX, crickets, music → `audio.wav` + `timeline.json` |
 | `scene.js` | Draws any frame: the porch set, Mo, Pebble, lighting, captions, hook text |
-| `render.cjs` | Headless Chromium draws 30 fps frames → ffmpeg → 1080×1920 MP4, loudness -14 LUFS |
+| `../../engine/render.cjs` | Headless Chromium draws 30 fps frames → ffmpeg → 1080×1920 MP4, loudness -14 LUFS |
 | `art.cjs` | Profile picture + banner |
 | `make.sh` | Runs the whole chain |
 
@@ -27,7 +27,7 @@ Then `PY=~/mp-venv/bin/python KOKORO_DIR=~/mp-models ./make.sh`.
 ## Making a new Short
 
 Copy an entry in `shorts.py`, change the lines and actions, run `./make.sh <id>`. Preview single
-frames first: `node render.cjs build/<id>/timeline.json --stills 1,5,9 previews/`.
+frames first: `node ../../engine/render.cjs scene.js build/<id>/timeline.json --stills 1,5,9 previews/`.
 
 Voices: Mo = `am_puck` pitched up 30%, Pebble = `am_onyx` pitched down 20% and slowed,
-Narrator = `bm_fable`. Change them in `VOICES` in `audio.py`.
+Narrator = `bm_fable`. Change them in `VOICES` in `../../engine/audio.py`.

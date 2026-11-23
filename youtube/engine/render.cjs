@@ -1,28 +1,29 @@
 // Render a timeline to MP4 (or stills) with headless Chromium + ffmpeg.
-//   node render.cjs build/<id>/timeline.json out.mp4
-//   node render.cjs build/<id>/timeline.json --stills 0,3.5,10 outdir/
+//   node render.cjs <scene.js> build/<id>/timeline.json out.mp4
+//   node render.cjs <scene.js> build/<id>/timeline.json --stills 0,3.5,10 outdir/
 const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
 const { spawn } = require('child_process');
 
-async function page() {
+async function page(scenePath) {
   const browser = await chromium.launch();
   const pg = await browser.newPage({ viewport: { width: 1080, height: 1920 } });
-  const sceneJs = fs.readFileSync(path.join(__dirname, 'scene.js'), 'utf8');
+  const sceneJs = fs.readFileSync(scenePath, 'utf8');
   await pg.setContent(`<!doctype html><html><body style="margin:0;background:#000">
     <canvas id="c" width="1080" height="1920"></canvas>
     <div style="font-family:Inter;font-weight:900;position:absolute;opacity:0">a<i>a</i></div>
     <div style="font-family:'Inter Display';font-weight:800;position:absolute;opacity:0">a</div>
+    <div style="font-family:'Baloo 2';font-weight:800;position:absolute;opacity:0">aभू</div>
     <script>${sceneJs}</script></body></html>`);
   await pg.evaluate(() => document.fonts.ready);
   return { browser, pg };
 }
 
 async function main() {
-  const [tlPath, ...rest] = process.argv.slice(2);
+  const [scenePath, tlPath, ...rest] = process.argv.slice(2);
   const tl = JSON.parse(fs.readFileSync(tlPath, 'utf8'));
-  const { browser, pg } = await page();
+  const { browser, pg } = await page(scenePath);
   await pg.evaluate(tl => { window.TL = tl; window.CTX = document.getElementById('c').getContext('2d'); }, tl);
   const grab = async (t, fmt) => pg.evaluate(([t, fmt]) => { Scene.draw(CTX, TL, t); return CTX.canvas.toDataURL(fmt, 0.92); }, [t, fmt]);
 

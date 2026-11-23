@@ -10,7 +10,7 @@ BUILD=${BUILD:-build}
 OUT=../output/shorts
 mkdir -p "$OUT"
 IDS=${1:-all}
-"$PY" audio.py "$IDS" "$BUILD"
+"$PY" ../../engine/audio.py . "$IDS" "$BUILD"
 if [ "$IDS" = all ]; then IDS=$("$PY" -c "from shorts import SHORTS; print(','.join(SHORTS))"); fi
-for id in ${IDS//,/ }; do node render.cjs "$BUILD/$id/timeline.json" "$OUT/$id.mp4"; done
+for id in ${IDS//,/ }; do node ../../engine/render.cjs scene.js "$BUILD/$id/timeline.json" "$OUT/$id.mp4"; done
 node art.cjs ../output/channel-art
