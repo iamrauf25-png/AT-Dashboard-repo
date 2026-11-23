@@ -141,6 +141,23 @@ def sfx(name, dur=None):
     if name == "gust":
         d = dur or 2.5; t = t_(d)
         return lowpass_noise(len(t), 0.01 + 0.03 * np.sin(np.pi * t / d), rnd) * np.sin(np.pi * t / d) * 2.2
+    if name == "chains":
+        out = np.zeros(int(1.4 * SR))
+        for i in range(14):
+            t = t_(0.18); f = rnd.uniform(2400, 5200)
+            hit = (np.sin(2 * np.pi * f * t) + 0.6 * np.sin(2 * np.pi * f * 1.33 * t) + 0.4 * np.sin(2 * np.pi * f * 2.1 * t)) * np.exp(-t * rnd.uniform(20, 40))
+            o = int((i * 0.09 + rnd.uniform(0, 0.03)) * SR); out[o:o + len(hit)] += hit * rnd.uniform(0.3, 0.7)
+        return out * 0.25
+    if name == "blow":
+        t = t_(0.7); return lowpass_noise(len(t), 0.08, rnd) * np.sin(np.pi * t / 0.7) ** 0.7 * 1.6
+    if name == "birds":
+        out = np.zeros(int(4.0 * SR))
+        for k in range(14):
+            st = rnd.uniform(0, 3.4); d = rnd.uniform(0.06, 0.14); t = t_(d)
+            f = rnd.uniform(2800, 4200) + rnd.uniform(-1500, 1500) * t / d
+            chirp = np.sin(2 * np.pi * np.cumsum(f) / SR) * np.sin(np.pi * t / d)
+            o = int(st * SR); out[o:o + len(chirp)] += chirp * rnd.uniform(0.2, 0.5)
+        return out * 0.35
     raise ValueError(name)
 
 
@@ -238,7 +255,7 @@ def music_comic(d, seed=9):
     return out[: int(d * SR)] * 0.12
 
 
-MUSIC = {"marimba": music_marimba, "horror": music_horror, "comic": music_comic}
+MUSIC = {"marimba": music_marimba, "tender": music_marimba, "horror": music_horror, "comic": music_comic}
 
 
 def envelope(a, n_frames):
@@ -250,6 +267,7 @@ def envelope(a, n_frames):
 
 
 def load_series(series_dir):
+    sys.path.insert(0, os.path.abspath(series_dir))
     spec = importlib.util.spec_from_file_location("shorts", os.path.join(series_dir, "shorts.py"))
     mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
     return mod.SHORTS, getattr(mod, "SERIES", {})
@@ -260,9 +278,10 @@ def build(sid, spec, series, outdir):
     out = os.path.join(outdir, sid); os.makedirs(out, exist_ok=True)
     cache = os.path.join(outdir, "_tts"); os.makedirs(cache, exist_ok=True)
     cur = 0.35
-    lines, acts, sfx_ev, voice = [], [], [], []
+    lines, acts, sfx_ev, voice, chapters = [], [], [], [], []
     for ev in spec["events"]:
         start = cur
+        if ev.get("chapter"): chapters.append({"start": round(start, 2), "title": ev["chapter"]})
         if "say" in ev:
             a = tts(ev["say"], ev.get("tts", ev["text"]), cache)
             if ev.get("cut"):
@@ -270,7 +289,7 @@ def build(sid, spec, series, outdir):
             d = len(a) / SR
             voice.append((start, a))
             who = ev["say"].replace("_WHISPER", "").replace("_SCARED", "").replace("_HI", "")
-            lines.append({"start": round(start, 3), "end": round(start + d, 3), "who": who, "text": ev["text"],
+            lines.append({"start": round(start, 3), "end": round(start + d, 3), "who": who, "text": ev["text"], "en": ev.get("en"),
                           "env": envelope(a, int(d * FPS) + 1)})
             cur += d + ev.get("gap", 0.22)
             evdur = d
@@ -316,9 +335,21 @@ def build(sid, spec, series, outdir):
     sf.write(os.path.join(out, "audio.wav"), mix.astype(np.float32), SR)
 
     tl = {"id": sid, "title": spec["title"], "fps": FPS, "duration": round(total, 3), "hook": spec.get("hook"),
-          "initial": spec.get("initial", {}), "acts": acts, "lines": lines}
+          "initial": spec.get("initial", {}), "acts": acts, "lines": lines,
+          "aspect": spec.get("aspect", "9:16"), "chapters": chapters}
     with open(os.path.join(out, "timeline.json"), "w") as f: json.dump(tl, f, ensure_ascii=False)
+    write_srt(os.path.join(out, "captions.hi.srt"), lines, "text")
+    if any(l.get("en") for l in lines): write_srt(os.path.join(out, "captions.en.srt"), lines, "en")
     print(f"{sid}: {total:.1f}s, {len(lines)} lines, {len(acts)} acts")
+
+
+def write_srt(path, lines, key):
+    ts = lambda x: f"{int(x // 3600):02d}:{int(x % 3600 // 60):02d}:{int(x % 60):02d},{int(round((x % 1) * 1000)):03d}"
+    with open(path, "w", encoding="utf-8") as f:
+        ls = [l for l in lines if l.get(key)]
+        for i, l in enumerate(ls, 1):
+            end = min(l["end"] + 0.25, ls[i]["start"] - 0.02) if i < len(ls) else l["end"] + 0.25
+            f.write(f"{i}\n{ts(l['start'])} --> {ts(end)}\n{l[key]}\n\n")
 
 
 if __name__ == "__main__":

@@ -24,7 +24,10 @@ async function main() {
   const [scenePath, tlPath, ...rest] = process.argv.slice(2);
   const tl = JSON.parse(fs.readFileSync(tlPath, 'utf8'));
   const { browser, pg } = await page(scenePath);
-  await pg.evaluate(tl => { window.TL = tl; window.CTX = document.getElementById('c').getContext('2d'); }, tl);
+  const ai = rest.indexOf('--aspect'); if (ai >= 0) { tl.aspect = rest[ai + 1]; rest.splice(ai, 2); }
+  const [CW, CH] = tl.aspect === '16:9' ? [1920, 1080] : [1080, 1920];
+  await pg.setViewportSize({ width: CW, height: CH });
+  await pg.evaluate(([tl, w, h]) => { const c = document.getElementById('c'); c.width = w; c.height = h; window.TL = tl; window.CTX = c.getContext('2d'); }, [tl, CW, CH]);
   const grab = async (t, fmt) => pg.evaluate(([t, fmt]) => { Scene.draw(CTX, TL, t); return CTX.canvas.toDataURL(fmt, 0.92); }, [t, fmt]);
 
   if (rest[0] === '--stills') {

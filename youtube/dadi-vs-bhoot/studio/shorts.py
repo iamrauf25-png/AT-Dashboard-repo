@@ -124,3 +124,10 @@ SHORTS = {
         ],
     },
 }
+
+# Long-form episodes (16:9) live in episodes.py and build with the same tools.
+try:
+    from episodes import EPISODES
+    SHORTS.update(EPISODES)
+except ImportError:
+    pass

@@ -101,3 +101,68 @@ Pin this comment yourself: `अगली बार भूत दादी को
   Chaman); **भूत और बिजली कटौती** (a power cut: is the ghost to blame?); **दादी का Wi-Fi password**; **भूत की
   नौकरी** (Chaman gets a night-watchman job); **श्मशान से रील** (Chaman starts making Reels).
 - Make new ones: add an entry to `studio/shorts.py`, then run `studio/make.sh <id>`.
+
+---
+
+# Long videos (16:9)
+
+| File | Length | Thumbnail | Subtitles |
+| --- | --- | --- | --- |
+| `long/e01-bhoot-ka-license.mp4` | 2:54 | `channel-art/thumb_e01.png` | `long/e01-bhoot-ka-license.hi.srt`, `.en.srt` |
+| `long/compilation-01.mp4` | 4:21 | `channel-art/thumb_comp.png` | — (Hindi captions are burned in) |
+
+**When:** post Episode 1 on a weekend (for example **Saturday 7:30 pm IST**) once 3–4 Shorts are already up.
+The Shorts bring in viewers, and the episode gives them something longer to watch. Post the compilation a week later.
+
+**Upload settings (both):** Not made for kids · Altered/synthetic content: Yes · Category Comedy ·
+Language Hindi · upload the custom thumbnail · add an **end screen** (the last 9 seconds of the episode
+are a "फिर मिलेंगे… आज रात!" card, left clear for it): one "subscribe" element and one "best for viewer"
+video. **Subtitles** (episode only): Studio → Subtitles → Add language → Hindi → Upload file → *with timing* →
+`.hi.srt`; repeat for English → `.en.srt`. The English track opens the episode to non-Hindi viewers.
+
+## Episode 1 · भूत का लाइसेंस
+
+**Title**
+```
+भूत का लाइसेंस रद्द?! 👻 दादी vs भूत | Episode 1 | Hindi Horror Comedy Cartoon
+```
+**Description**
+```
+भूत संघ ने चमन भूत को नोटिस भेजा है — अगर सूरज उगने से पहले दादी नहीं डरीं, तो उसका भूत लाइसेंस रद्द! 😱
+पाँच प्लान। एक रात। एक दादी जो कभी नहीं डरती। 😂
+
+The Ghost Union has warned Chaman Bhoot: scare Dadi before sunrise, or lose his ghost licence. Five plans. One night. One Dadi who is never scared.
+
+0:00 भूत का नोटिस
+0:27 प्लान 1: ज़ंजीरें
+0:47 प्लान 2: अँधेरा
+1:09 प्लान 3: चुड़ैल
+1:35 प्लान 4: उल्टा भूत
+1:55 प्लान 5: आख़िरी रात
+2:26 सुबह
+
+अगली बार भूत कौन सा प्लान आज़माए? Comment करो 👇
+
+#DadiVsBhoot #bhoot #horrorcomedy #hindicartoon #bhootwalacartoon
+```
+**Tags**: `dadi vs bhoot, दादी vs भूत, bhoot cartoon, hindi cartoon, horror comedy cartoon, bhoot wala cartoon, chudail cartoon, funny bhoot story, hindi kahaniya, animated story hindi`
+
+## Compilation 1 · सारे किस्से
+
+**Title**
+```
+दादी vs भूत — सारे किस्से 👻😂 Episode 1 + 5 Funny Bhoot Stories | Hindi Cartoon
+```
+**Description**
+```
+चमन भूत 200 साल से दादी को डराने की कोशिश कर रहा है… एक भी बार कामयाब नहीं हुआ। 😂 पूरा पहला एपिसोड और पाँच छोटे किस्से, एक साथ।
+
+0:00 एपिसोड 1: भूत का लाइसेंस
+2:54 भूत से 200 साल का किराया
+3:17 भूत को किससे डर लगता है?
+3:36 भूत ने कहा 'बू!'
+3:50 भूत के उल्टे पैर
+4:05 भूत की फ़ोटो
+
+#DadiVsBhoot #bhoot #hindicartoon #horrorcomedy
+```
