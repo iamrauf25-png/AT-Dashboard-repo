@@ -26,3 +26,9 @@ Made with the yt-* skills in `.claude/skills/`. Nothing here gets published auto
 - `/yt-viral`: research other cartoon channels. Needs a video list collected with
   `yt-dlp --flat-playlist -J <channel URL>` on your own computer (this cloud session can't reach YouTube).
 - `/yt-audit`: after episode 4.
+
+## Finished, ready to upload
+- **`output/UPLOAD-SHEET.md`**: how to create the channel, the posting schedule, and copy-paste titles and descriptions
+- `output/shorts/*.mp4`: 5 finished Shorts (1080×1920, 30 fps, -14 LUFS)
+- `output/channel-art/`: profile picture (800×800) + banner (2560×1440)
+- `studio/`: the code that makes them; new Shorts come from `studio/shorts.py` + `studio/make.sh`
