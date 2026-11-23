@@ -4,7 +4,7 @@ Hindi horror-comedy cartoon Shorts. **Start with [`output/UPLOAD-SHEET.md`](outp
 
 | Path | What |
 | --- | --- |
-| `output/shorts/*.mp4` | 5 finished Shorts (Hindi voices + Devanagari captions, 1080×1920) |
+| `output/shorts/*.mp4` | 14 finished Shorts (Hindi voices + Devanagari captions, 1080×1920) |
 | `output/channel-art/` | Profile picture, banner, long-video thumbnails |
 | `output/long/` | Episode 1 (2:54) + Compilation 1 (4:21), 1920×1080, with Hindi + English subtitle files |
 | `studio/episodes.py` | Long-form episode scripts (16:9, chapters, English subtitles) |
