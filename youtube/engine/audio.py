@@ -12,7 +12,7 @@ import soundfile as sf
 
 SR = 48000
 FPS = 30
-MODELS = os.environ.get("KOKORO_DIR", "/home/user/mp-tools/models")
+MODELS = os.environ.get("KOKORO_DIR", os.path.expanduser("~/mp-tools/models"))
 
 # who: (kokoro voice, lang, speed, pitch ratio, gain, extra ffmpeg filter)
 VOICES = {

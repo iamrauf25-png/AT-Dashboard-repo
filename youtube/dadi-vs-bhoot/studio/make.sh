@@ -5,7 +5,7 @@
 # Needs: python venv with kokoro-onnx (see README.md), Node + Playwright, ffmpeg.
 set -euo pipefail
 cd "$(dirname "$0")"
-PY=${PY:-/home/user/mp-tools/venv/bin/python}
+PY=${PY:-$HOME/mp-tools/venv/bin/python}
 BUILD=${BUILD:-build}
 OUT=../output/shorts
 mkdir -p "$OUT"

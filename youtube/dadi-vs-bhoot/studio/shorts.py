@@ -125,9 +125,9 @@ SHORTS = {
     },
 }
 
-# Long-form episodes (16:9) live in episodes.py and build with the same tools.
-try:
-    from episodes import EPISODES
-    SHORTS.update(EPISODES)
-except ImportError:
-    pass
+# Long-form episodes (16:9) live in episodes.py; each week's new Shorts live in batch_NN.py.
+import glob as _glob, importlib as _il, os as _os
+from episodes import EPISODES
+SHORTS.update(EPISODES)
+for _f in sorted(_glob.glob(_os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "batch_*.py"))):
+    SHORTS.update(_il.import_module(_os.path.basename(_f)[:-3]).SHORTS)

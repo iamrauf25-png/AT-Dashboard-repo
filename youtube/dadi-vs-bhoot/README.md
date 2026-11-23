@@ -1,6 +1,6 @@
 # दादी vs भूत (Dadi vs Bhoot)
 
-Hindi horror-comedy cartoon Shorts. **Start with [`output/UPLOAD-SHEET.md`](output/UPLOAD-SHEET.md).**
+Hindi horror-comedy cartoon Shorts. **Start with [`output/UPLOAD-SHEET.md`](output/UPLOAD-SHEET.md) (channel setup), then [`output/CALENDAR.md`](output/CALENDAR.md) (what to post each day).**
 
 | Path | What |
 | --- | --- |
@@ -8,6 +8,9 @@ Hindi horror-comedy cartoon Shorts. **Start with [`output/UPLOAD-SHEET.md`](outp
 | `output/channel-art/` | Profile picture, banner, long-video thumbnails |
 | `output/long/` | Episode 1 (2:54) + Compilation 1 (4:21), 1920×1080, with Hindi + English subtitle files |
 | `studio/episodes.py` | Long-form episode scripts (16:9, chapters, English subtitles) |
+| `studio/batch_NN.py` | Each week's new Shorts (loaded automatically) |
+| `studio/IDEAS.md` | Idea log the weekly batch draws from; paste viewer comments here |
+| `output/CALENDAR.md` | **The day-by-day posting plan**: file, title and description for every day |
 | `output/UPLOAD-SHEET.md` | Channel setup, schedule, copy-paste titles/descriptions/tags |
 | `studio/shorts.py` | The scripts / shot lists (edit these to make new Shorts) |
 | `studio/scene.js` | Village courtyard set, peepal tree, Dadi, Chaman Bhoot, fog, captions |
