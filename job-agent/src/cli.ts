@@ -1,6 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
+import { applyStep } from "./apply.js";
 import { cvText, scoreJob } from "./claude.js";
+import { googleLogin } from "./google.js";
+import { whatsapp } from "./notify.js";
 import { loadConfig } from "./config.js";
 import { matchTracks } from "./filter.js";
 import {
@@ -14,6 +17,7 @@ import {
   gmailStep,
   scoreStep,
   shortlistStep,
+  whatsappSummary,
   writeReport,
 } from "./pipeline.js";
 import { Store } from "./store.js";
@@ -23,13 +27,16 @@ const HELP = `job-agent — find, score and prepare job applications
 
 Usage: npm run job -- <command> [args]
 
-  run [--import FILE...]   Full daily run: Gmail + job boards, filter, score, tailor CVs for
-                           the top N, write the report, email you the digest
+  run [--import FILE...]   Full daily run: Gmail (replies, interviews → Calendar + WhatsApp),
+                           job boards, score, tailor CVs, apply by email, report, digest
   fetch [--import FILE...] Only fetch new jobs (and import your own CSV/JSON)
   gmail                    Only check Gmail (job alerts + replies from companies)
   jd ID FILE               Give a job its full description (copied into a .txt file),
                            then re-score it and re-tailor the CV and materials
+  apply [ID]               Apply by email now (one job, or every shortlisted job that allows it)
   cvs                      Check that each track's CV can be read
+  google-login             Connect Google Calendar (once)
+  whatsapp-test            Send yourself a test WhatsApp message
   score                    Filter and score jobs not yet scored
   shortlist                Draft materials for the best scored jobs
   report                   Rewrite today's report
@@ -49,7 +56,7 @@ async function main() {
   if (cmd === "help" || cmd === "--help" || cmd === "-h") return console.log(HELP);
 
   try {
-    process.loadEnvFile(".env"); // ANTHROPIC_API_KEY, GMAIL_APP_PASSWORD, optional ADZUNA_APP_ID / ADZUNA_APP_KEY
+    process.loadEnvFile(".env"); // API keys and passwords; see README
   } catch {}
   const cfg = loadConfig();
   const store = new Store();
@@ -67,13 +74,16 @@ async function main() {
       filterStep(store, cfg);
       await scoreStep(store, cfg);
       const fresh = await shortlistStep(store, cfg);
-      const report = writeReport(store, cfg, events);
+      console.log("Applying by email where the job allows it...");
+      const applied = await applyStep(store, cfg);
+      const report = writeReport(store, cfg, events, applied);
       exportCsv(store);
       try {
         await digestStep(store, cfg, fresh, events);
       } catch (e) {
         console.warn(`  Digest not sent: ${(e as Error).message}`);
       }
+      await whatsappSummary(store, cfg, fresh, applied);
       const due = followUpsDue(store, cfg).length;
       console.log(`\nReport: ${path.relative(process.cwd(), report)}`);
       if (due) console.log(`${due} follow-up(s) due — run: npm run job -- followups`);
@@ -107,6 +117,20 @@ async function main() {
       console.log(`Written: ${path.relative(process.cwd(), dir)}/`);
       break;
     }
+    case "apply": {
+      const r = await applyStep(store, cfg, undefined, args[0] ? store.find(args[0]) : undefined);
+      for (const j of r.sent) console.log(`Sent: ${j.company} — ${j.title}`);
+      for (const j of r.drafted) console.log(`Drafted: ${j.company} — ${j.title}`);
+      for (const h of r.held) console.log(`Held: ${h.job.company} — ${h.job.title}: ${h.reason}`);
+      if (args[0] && r.portal.length) console.log(`No application email in this job's description — apply on the website: ${r.portal[0].url}`);
+      break;
+    }
+    case "google-login":
+      await googleLogin();
+      break;
+    case "whatsapp-test":
+      console.log((await whatsapp(cfg, "✅ Job agent can reach you on WhatsApp.")) ? "Sent." : "Not sent (see the warning above, and the whatsapp section of config.yaml).");
+      break;
     case "cvs":
       for (const t of cfg.profile.tracks) {
         const text = await cvText(t, cfg);
@@ -160,7 +184,10 @@ async function main() {
       const status = need(args[1], "STATUS") as JobStatus;
       if (!STATUSES.includes(status)) throw new Error(`Unknown status "${status}". Use one of: ${STATUSES.join(", ")}`);
       j.status = status;
-      if (status === "applied" && !j.appliedAt) j.appliedAt = new Date().toISOString();
+      if (status === "applied" && !j.appliedAt) {
+        j.appliedAt = new Date().toISOString();
+        j.appliedVia = "manual";
+      }
       const note = args.slice(2).join(" ");
       if (note) j.notes.push({ at: new Date().toISOString(), text: note });
       store.save();

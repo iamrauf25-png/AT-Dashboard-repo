@@ -84,6 +84,57 @@ const ConfigSchema = z.object({
       min_score: 60,
       max_jobs_per_run: 80,
     }),
+  // Applying by email when a job description gives an address to send your CV to.
+  apply: z
+    .object({
+      // auto: send right away · draft: put it in Gmail Drafts for you to send · off
+      mode: z.enum(["auto", "draft", "off"]).default("draft"),
+      min_score: z.number().default(70), // never send below this score
+      max_per_day: z.number().default(10),
+      bcc_self: z.boolean().default(true),
+    })
+    .default({ mode: "draft", min_score: 70, max_per_day: 10, bcc_self: true }),
+  // Replying to recruiters and companies.
+  replies: z
+    .object({
+      mode: z.enum(["auto", "draft", "off"]).default("draft"),
+      max_per_run: z.number().default(10),
+      // Facts the agent may share when asked. Leave a field empty and it will ask you instead of guessing.
+      facts: z.record(z.string(), z.string()).default({}),
+      // When you can attend interviews; used to accept a proposed time or to offer slots.
+      availability: z
+        .object({
+          days: z.array(z.enum(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"])).default(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]),
+          start: z.string().default("10:00"),
+          end: z.string().default("18:00"),
+          min_notice_hours: z.number().default(18),
+        })
+        .default({ days: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"], start: "10:00", end: "18:00", min_notice_hours: 18 }),
+    })
+    .default({
+      mode: "draft",
+      max_per_run: 10,
+      facts: {},
+      availability: { days: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"], start: "10:00", end: "18:00", min_notice_hours: 18 },
+    }),
+  calendar: z
+    .object({
+      enabled: z.boolean().default(true),
+      calendar_id: z.string().default("primary"),
+      reminders_minutes: z.array(z.number()).default([1440, 120, 30]),
+    })
+    .optional(),
+  whatsapp: z
+    .object({
+      enabled: z.boolean().default(true),
+      // callmebot: free, personal-use notifications (key in CALLMEBOT_API_KEY)
+      // twilio: TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_WHATSAPP_FROM in .env
+      provider: z.enum(["callmebot", "twilio"]).default("callmebot"),
+      phone: z.string(), // your number with country code, e.g. +9198XXXXXXXX
+      daily_summary: z.boolean().default(true),
+    })
+    .optional(),
+  timezone: z.string().default("Asia/Kolkata"),
   follow_up_days: z.number().default(7),
   model: z.string().default("claude-opus-5-5"),
 });

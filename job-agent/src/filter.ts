@@ -53,7 +53,8 @@ export function hardFilter(job: Job, cfg: Config): string | null {
   if (!tracks.length) return "title not in any track";
   job.tracks = tracks;
 
-  if (p.locations.length) {
+  // Recruiter emails often don't state a location; let Claude judge those from the email itself.
+  if (p.locations.length && !(job.source === "recruiter" && !job.location)) {
     const loc = norm(job.location);
     const inArea = p.locations.some((l) => loc.includes(norm(l)));
     if (!inArea && !(p.remote_ok && job.remote)) return `location "${job.location || "unknown"}"`;

@@ -33,6 +33,8 @@ export interface ScoreResult {
   logistics_fit: number;
   verdict: "strong" | "possible" | "weak";
   best_track: string; // which of your CVs to build the application on
+  apply_email: string; // address the job description asks you to send your CV to, or ""
+  apply_instructions: string; // e.g. "mention job code OPS-12 in the subject", or ""
   reasons: string[];
   gaps: string[];
   red_flags: string[];
@@ -46,6 +48,17 @@ export interface InboxEvent {
   summary: string;
   action?: string;
   jobId?: string; // the tracked job this email is about, if any
+  interview?: Interview;
+  handled?: string; // what the agent did: "replied", "drafted", "calendar", "whatsapp", ...
+}
+
+export interface Interview {
+  start: string; // ISO 8601 with offset; "" if no fixed time yet
+  end: string;
+  mode: "in_person" | "video" | "phone" | "unknown";
+  where: string; // address or meeting link
+  with: string; // interviewer / company contact
+  calendarEventId?: string;
 }
 
 export interface Job extends RawJob {
@@ -57,6 +70,8 @@ export interface Job extends RawJob {
   score?: ScoreResult;
   materialsDir?: string;
   appliedAt?: string;
+  appliedVia?: "email" | "manual";
+  applicationMessageId?: string; // Message-ID of the application email we sent
   followUpDraftedAt?: string;
   inbox?: InboxEvent[];
   notes: { at: string; text: string }[];

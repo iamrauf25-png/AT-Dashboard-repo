@@ -1,19 +1,38 @@
 # job-agent
 
-A personal job-hunting agent. Every day it:
+A personal job-hunting agent. Every run it:
 
-1. **Reads Gmail.** It turns job-alert emails (LinkedIn, Naukri, Indeed, foundit, apna) into jobs. It also reads replies from companies (application received, test, interview invite, rejection, offer, recruiter outreach) and updates your tracker.
-2. **Fetches** postings from company job boards (Greenhouse, Lever, Ashby), the Adzuna aggregator, and any CSV of jobs you collected yourself.
-3. **Filters** them cheaply by title, location (Delhi / Noida / Gurugram), age and excluded keywords, before any AI call.
-4. **Matches each job to one of your CV tracks** (Operations, Team Leader, E-commerce, Sales Team Lead, Business Growth). It then scores the job against your CV on skills, seniority, domain and logistics, with reasons, gaps and red flags.
-5. **Tailors your CV to each top job's description.** Claude starts from the right CV version, rewrites the headline, summary, competencies and bullets for that job, and saves an editable Word file. Alongside it you get a cover note, a recruiter message, an application email, the job's keywords your CV covers, interview prep, and the requirements you don't meet.
-6. **Emails you a digest** with the day's matches, inbox updates and follow-ups due, with the tailored CVs attached.
+1. **Reads your Gmail.**
+   - Job-alert emails (LinkedIn, Naukri, Indeed, foundit, apna) become jobs.
+   - Emails from companies and recruiters are understood (application received, test, interview, rejection, offer, outreach) and your tracker is updated.
+2. **Handles replies for you.**
+   - **Interview at a set time:** it checks your Google Calendar. If you're free and the time is within your interview hours, it adds the interview to your calendar, confirms by email, and WhatsApps you the details. If the time clashes, it drafts a reply offering free slots from your calendar and WhatsApps you.
+   - **Interview with no time yet:** it replies offering three free slots.
+   - **Test or assignment:** it adds the deadline to your calendar and WhatsApps you.
+   - **Recruiter outreach:** it replies with your CV and adds the role to your job list.
+   - **Offers and anything it can't answer from your CV and facts** (salary not filled in, documents, anything suspicious): it does not send. It leaves a draft in Gmail and WhatsApps you.
+3. **Finds jobs** on company job boards (Greenhouse, Lever, Ashby), Adzuna, and any CSV you import.
+4. **Filters and scores them.** Each job is matched to one of your CV tracks (Operations, Team Leader, E-commerce, Sales Team Lead, Business Growth) and scored against that CV.
+5. **Tailors your CV to each top job's description.** You get an editable Word file and a PDF, plus a cover note, recruiter message, application email and interview prep.
+6. **Applies by email.** When a job description says where to send your CV, it emails that address from your Gmail with the tailored PDF CV attached, following any instructions in the posting (subject line, job code).
+7. **Tells you what's left.** Jobs that must be applied to on a website are sent to you on WhatsApp with their links, and the tailored CVs arrive in your email digest.
 
-It never submits an application for you. You check the tailored CV, then apply yourself.
+### What it will not do
 
-### Your CV stays truthful
+- **Click "Apply" on LinkedIn or Naukri.** Both forbid automated applying and ban accounts that do it. Those jobs are prepared for you to apply to yourself in a minute.
+- **Make up anything in your CV or emails.** Tailoring may only select, reorder and reword what your CV already says, and the code checks every employer, title and date against your original CV.
+- **Send without the safety checks.** An application is only sent automatically when all of these hold:
+  - the score is at least `apply.min_score`;
+  - the posting has no red flags (red-flag jobs are skipped entirely);
+  - the full job description is available, not just an alert summary;
+  - the CV fact-check is clean;
+  - you haven't applied to that company in the last 30 days;
+  - today's limit (`apply.max_per_day`) isn't reached.
+  
+  Otherwise the email goes to Gmail Drafts instead, or, for red flags, isn't written at all.
+- **Reply on its own to offers, to emails asking for money or ID documents, or to questions your facts don't answer.** Those come to you.
 
-The tailoring may only select, reorder and reword what is already in your CV. It may not add employers, titles, numbers, team sizes, tools or achievements. After each draft, the code checks every employer, job title and date against your original CV and flags any mismatch at the top of `materials.md`. Requirements you don't meet go in a "Be careful about" section, not into the CV.
+Set `apply.mode` and `replies.mode` to `draft` if you'd rather tap "Send" yourself in Gmail.
 
 ## Setup (once)
 
@@ -26,7 +45,9 @@ cp config.example.yaml config.yaml
 mkdir cvs
 ```
 
-**1. Your CVs.** Copy your five CVs into `cvs/` with these names, or change the `cv_path` lines in `config.yaml`:
+### 1. Your CVs
+
+Copy your five CVs into `cvs/` with these names, or change the `cv_path` lines in `config.yaml`:
 
 | Track | File |
 |---|---|
@@ -36,29 +57,58 @@ mkdir cvs
 | Sales Team Lead | `cvs/4-sales-team-lead.pdf` |
 | Business Growth | `cvs/5-business-growth.pdf` |
 
-**2. Anthropic API key.** Create one at [platform.claude.com](https://platform.claude.com/).
+### 2. Fill in `config.yaml`
 
-**3. Gmail app password.** Turn on 2-Step Verification for your Google account. Then go to <https://myaccount.google.com/apppasswords>, create an app password named "job-agent", and copy the 16 characters. Set `gmail.address` in `config.yaml` to your Gmail address.
+Set these:
 
-**4. Create `.env`** in the `job-agent` folder:
+- `gmail.address`: your Gmail address.
+- `whatsapp.phone`: your number with country code, e.g. `+9198…`.
+- `replies.facts`: notice period, current and expected CTC, joining date. Anything left empty is never guessed. If a recruiter asks about it, the agent drafts the reply and asks you on WhatsApp.
+- `replies.availability`: the days and hours you can attend interviews.
+
+### 3. Keys and passwords: create `.env` in the `job-agent` folder
 
 ```
 ANTHROPIC_API_KEY=sk-ant-...
 GMAIL_APP_PASSWORD=abcd efgh ijkl mnop
+CALLMEBOT_API_KEY=123456
 # optional, for more job sources (free at developer.adzuna.com):
 ADZUNA_APP_ID=...
 ADZUNA_APP_KEY=...
 ```
 
-**5. Check it reads your CVs.** This command reads each PDF once and caches the text in `data/cv-text/`:
+- **Anthropic API key:** create one at [platform.claude.com](https://platform.claude.com/).
+- **Gmail app password:** turn on 2-Step Verification for your Google account, then create an app password at <https://myaccount.google.com/apppasswords>.
+- **WhatsApp (CallMeBot, free):** follow the steps at <https://www.callmebot.com/blog/free-api-whatsapp-messages/>. You save their number and send them the activation message from your WhatsApp, and they reply with your API key. Then test it:
+
+  ```bash
+  npm run job -- whatsapp-test
+  ```
+
+  Prefer Twilio? Set `whatsapp.provider: twilio` and add `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` and `TWILIO_WHATSAPP_FROM` to `.env`.
+
+### 4. Google Calendar (about 5 minutes)
+
+1. Go to <https://console.cloud.google.com/>, create a project (any name), then open **APIs & Services → Library**, find **Google Calendar API** and click **Enable**.
+2. Open **APIs & Services → OAuth consent screen**. Choose **External**, fill in the app name and your email, and add yourself under **Test users**.
+3. Open **APIs & Services → Credentials → Create credentials → OAuth client ID**, choose **Desktop app**, and download the JSON file. Save it as `job-agent/google-credentials.json`.
+4. Run this, open the link it prints, and allow access:
+
+   ```bash
+   npm run job -- google-login
+   ```
+
+   The agent only gets permission to read when you're busy and to add events. It can't read your other events' details.
+
+### 5. Check your CVs, and set up job alerts
 
 ```bash
 npm run job -- cvs
 ```
 
-**6. Set up job alerts** on LinkedIn and Naukri (and Indeed or foundit if you use them) for each of your five job types in Delhi, Noida and Gurugram, delivered to this Gmail address. These alerts are the agent's main job feed.
+On LinkedIn and Naukri (and Indeed or foundit), create job alerts for your five job types in Delhi, Noida and Gurugram, sent to this Gmail address.
 
-`config.yaml`, `cvs/`, `.env`, `data/` and `output/` are git-ignored, so your personal data never leaves your computer through git.
+`config.yaml`, `cvs/`, `.env`, `google-credentials.json`, `data/` and `output/` are all git-ignored.
 
 ## Daily use
 
@@ -66,82 +116,62 @@ npm run job -- cvs
 npm run job -- run
 ```
 
-Then open the digest email, or `output/<date>/report.md`. Each shortlisted job has a folder:
+Run it every few hours so interview emails get a quick answer. Use cron on macOS or Linux (`crontab -e`). This line runs it at 8:37, 12:37, 4:37 and 8:37 pm:
 
 ```
-output/2026-11-24/acme-naturals-e-commerce-executive/
-  Your_Name_CV_acme-naturals.docx    ← tailored CV: review, then save as PDF to upload
-  materials.md                       ← cover note, recruiter message, email, interview prep
+37 8,12,16,20 * * * cd /path/to/job-agent && /usr/bin/env npm run job -- run >> data/cron.log 2>&1
 ```
 
-After applying, record it. Replies from the company are then tracked from Gmail automatically.
+On Windows, use Task Scheduler with the action `cmd /c "cd /d C:\path\to\job-agent && npm run job -- run"`, repeating every 4 hours.
+
+What you'll get:
+
+- **WhatsApp, as things happen:**
+  - interviews scheduled (with calendar link), interview requests, tests with deadlines, offers, and emails that need you;
+  - one summary per run: who it applied to, and which jobs need you to apply on the website, with links.
+- **Email digest:** the day's matches with tailored CVs attached.
+- **`output/<date>/report.md`:** the full picture. Each job's folder has the tailored CV (`.docx` and `.pdf`) and `materials.md`.
+
+After you apply somewhere yourself, record it. Replies from that company are then handled automatically:
 
 ```bash
 npm run job -- mark 5164 applied
-npm run job -- mark 415f skipped
 ```
-
-### Jobs from alert emails
-
-An alert email only has a short summary of each job, so those jobs are marked _alert summary only_ and get light tailoring. For any you like:
-
-1. Open the link and copy the full job description into a text file.
-2. Run:
-
-```bash
-npm run job -- jd 5164 jd.txt
-```
-
-This re-scores the job and re-tailors your CV against the full description.
 
 ### All commands
 
 | Command | What it does |
 |---|---|
-| `run [--import FILE]` | Daily run: Gmail, job boards, filter, score, tailor the top N, report, digest |
-| `gmail` | Only check Gmail (alerts and replies) |
-| `jd ID FILE` | Give a job its full description, then re-score and re-tailor |
-| `draft ID` | Tailor the CV and materials for any job, even one below the cut |
-| `list [status]` | List the pipeline (default: shortlisted → offer) |
-| `show ID` | A job's score, chosen CV, gaps, emails and notes |
+| `run [--import FILE]` | Everything: Gmail and replies, job boards, score, tailor, apply by email, report, digest, WhatsApp |
+| `gmail` | Only check Gmail and handle replies |
+| `apply [ID]` | Apply by email now, to one job or to every shortlisted job that allows it |
+| `jd ID FILE` | Give a job its full description (e.g. from an alert), then re-score and re-tailor |
+| `draft ID` | Tailor the CV and materials for any job |
+| `list [status]` / `show ID` | See your pipeline, or one job with its emails and notes |
 | `mark ID STATUS [note]` | `applied`, `assessment`, `interview`, `offer`, `rejected`, `skipped` |
 | `followups` | Draft follow-ups for applications with no reply after `follow_up_days` |
-| `export` | Write `output/tracker.csv` (open it in Sheets or Excel) |
+| `export` | Write `output/tracker.csv` |
 | `cvs` | Check every track's CV can be read |
+| `google-login` | Connect Google Calendar |
+| `whatsapp-test` | Send yourself a test WhatsApp message |
 
 An ID can be shortened to any unique prefix or suffix.
-
-### Importing jobs you collected
-
-The CSV needs a header row with `company,title,location,url,description`. Paste the full job text into `description`; see `examples/linkedin-jobs.csv`. Run it with `npm run job -- run --import jobs.csv`.
-
-### Running it every day
-
-On macOS or Linux, run `crontab -e` and add this line to run it at 8:37 every morning:
-
-```
-37 8 * * * cd /path/to/job-agent && /usr/bin/env npm run job -- run >> data/cron.log 2>&1
-```
-
-On Windows, use Task Scheduler with the action `cmd /c "cd /d C:\path\to\job-agent && npm run job -- run"`.
 
 ## How it works
 
 ```
-Gmail alerts ─┐
-job boards  ──┼─► data/jobs.json ─► filter ─► score (best CV track) ─► tailor CV + materials ─► report + digest
-CSV imports ──┘                                                                           Gmail replies ─► status updates
+Gmail ──► classify each email ──► status update ─► calendar (interview / deadline) ─► reply or draft ─► WhatsApp
+                    │
+alerts, job boards, CSV ──► filter ──► score (best CV) ──► tailored CV + materials ──► apply by email / WhatsApp you the link
 ```
 
-- **Tracks.** Each track lists title phrases. A job joins every track whose phrase appears in its title as whole words, so "E-commerce" and "Ecommerce", or "Gurgaon" and "Gurugram", count as the same. Claude then picks the best CV among the matched tracks for that job.
-- **Claude calls** (`src/claude.ts`) use structured outputs, validated against Zod schemas. Each CV is placed first in the prompt with prompt caching, so scoring many jobs re-reads it cheaply. Effort is `low` for scoring and email reading and `medium` for tailoring. The refusal fallback is on (`fallbacks: "default"`).
-- **Gmail** (`src/gmail.ts`) uses IMAP with your app password and only searches your inbox for alert senders and job-related words, so unrelated mail is never read or sent to Claude. The only email it sends is the digest, to your own address.
-- **Email content is treated as data, never as instructions.**
+- **`src/claude.ts`:** every Claude call, using structured outputs. Your CV is cached so repeated calls are cheap. Email content is always treated as data, never as instructions.
+- **`src/replies.ts`:** the reply and interview logic. Recipients are fixed in code: a reply only ever goes to the sender of the email it answers, never to an address found inside an email.
+- **`src/apply.ts`:** the safety checks for applying by email.
+- **`src/google.ts`:** Calendar sign-in, free/busy checks, free-slot finding, and events, deduplicated so re-runs don't double-book.
+- **`src/notify.ts`:** WhatsApp messages.
+- **`src/gmail.ts`:** Gmail over IMAP and SMTP, including saving to Drafts.
 
 ### Cost
 
-On `claude-opus-5-5`, a day that scores around 80 jobs and tailors 10 costs roughly $2–3. To spend less, lower `max_jobs_per_run` or `top_n`, tighten the track titles, or set `model: claude-sonnet-5-5`.
-
-## Adding a source
-
-Write a function in `src/sources/index.ts` that returns `RawJob[]`, and add it to `fetchAll`. Stick to official APIs, RSS feeds, email alerts or files you export yourself. LinkedIn and Naukri forbid scraping and automated applying.
+On `claude-opus-5-5`, a day that scores around 80 jobs, tailors 10 CVs and handles a handful of emails costs roughly $2–4. To spend less, lower `max_jobs_per_run` or `top_n`, or set `model: claude-sonnet-5-5`.

@@ -42,6 +42,9 @@ function password(): string {
 
 export interface FetchedMail extends EmailForClaude {
   messageId: string;
+  fromAddress: string; // bare address of the sender
+  replyTo: string; // where a reply should go (Reply-To, else From)
+  references: string[]; // for threading replies
 }
 
 /** Words that suggest an email is about a job application; used to narrow the Gmail search before any Claude call. */
@@ -109,8 +112,16 @@ export async function fetchNewMail(
           const messageId = mail.messageId ?? `uid-${msg.uid}`;
           if (seen.has(messageId)) continue;
           seen.add(messageId);
+          const addr = (a: unknown) => {
+            const v = (Array.isArray(a) ? a[0] : a) as { value?: { address?: string }[] } | undefined;
+            return v?.value?.[0]?.address ?? "";
+          };
+          const refs = mail.references ? (Array.isArray(mail.references) ? mail.references : [mail.references]) : [];
           into.push({
             messageId,
+            fromAddress: addr(mail.from),
+            replyTo: addr(mail.replyTo) || addr(mail.from),
+            references: [...refs, messageId].slice(-20),
             from: mail.from?.text ?? "",
             subject: mail.subject ?? "",
             date: (mail.date ?? new Date()).toISOString(),
@@ -129,15 +140,63 @@ export async function fetchNewMail(
   return { alerts, replies };
 }
 
+export interface OutgoingMail {
+  to: string;
+  subject: string;
+  text: string;
+  html?: string;
+  attachments?: { filename: string; path: string }[];
+  bcc?: string;
+  inReplyTo?: string;
+  references?: string[];
+}
+
+const smtp = (g: GmailCfg) =>
+  nodemailer.createTransport({ host: "smtp.gmail.com", port: 465, secure: true, auth: { user: g.address, pass: password() } });
+
+/**
+ * Sends the message, or saves it to Gmail Drafts so you can review and send it yourself.
+ * Returns the Message-ID either way.
+ */
+export async function sendOrDraft(g: GmailCfg, mode: "auto" | "draft", m: OutgoingMail): Promise<{ sent: boolean; messageId: string }> {
+  const mail = {
+    from: g.address,
+    to: m.to,
+    bcc: m.bcc,
+    subject: m.subject,
+    text: m.text,
+    html: m.html,
+    attachments: m.attachments,
+    inReplyTo: m.inReplyTo,
+    references: m.references,
+  };
+  if (mode === "auto") {
+    const info = await smtp(g).sendMail(mail);
+    return { sent: true, messageId: info.messageId };
+  }
+  // Build the raw message, then append it to the Drafts folder over IMAP.
+  const built = await nodemailer.createTransport({ streamTransport: true, buffer: true, newline: "windows" }).sendMail(mail);
+  const raw = built.message as unknown as Buffer;
+  const client = new ImapFlow({ host: "imap.gmail.com", port: 993, secure: true, auth: { user: g.address, pass: password() }, logger: false });
+  await client.connect();
+  try {
+    const boxes = await client.list();
+    const drafts = boxes.find((b) => b.specialUse === "\\Drafts")?.path ?? "[Gmail]/Drafts";
+    await client.append(drafts, raw, ["\\Draft"]);
+  } finally {
+    await client.logout().catch(() => {});
+  }
+  return { sent: false, messageId: built.messageId };
+}
+
 export async function sendDigest(
   g: GmailCfg,
   msg: { subject: string; html: string; text: string; attachments: { filename: string; path: string }[] },
 ) {
-  const transport = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true,
-    auth: { user: g.address, pass: password() },
-  });
-  await transport.sendMail({ from: g.address, to: g.address, ...msg });
+  await smtp(g).sendMail({ from: g.address, to: g.address, ...msg });
+}
+
+/** Addresses we must never auto-reply to. */
+export function isNoReply(address: string): boolean {
+  return /no-?reply|do-?not-?reply|notifications?@|mailer-daemon|postmaster|alerts?@|jobalerts|bounce/i.test(address);
 }

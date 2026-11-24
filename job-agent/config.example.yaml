@@ -106,6 +106,53 @@ gmail:
   # sites for your five job types and Delhi / Noida / Gurugram, and they flow in automatically.
   # alert_senders: [jobalerts-noreply@linkedin.com, jobs-noreply@linkedin.com, naukri.com, indeed.com, foundit.in, apna.co]
 
+# Applying by email: when a job description says "send your CV to hr@…", the agent emails that address
+# from your Gmail with the tailored CV (PDF) and a short cover email. Jobs without an address are left for
+# you to apply to on the website (the agent WhatsApps you the links with your CV ready).
+apply:
+  mode: auto # auto = send · draft = leave in Gmail Drafts for you to send · off
+  min_score: 70 # never auto-send below this score
+  max_per_day: 10 # extra ones go to Drafts
+  bcc_self: true # get a copy of every application in your inbox
+  # Even in auto mode, an application is only drafted (not sent) if the posting has red flags, the CV
+  # fact-check flagged something, the job came from an alert summary, or you applied to that company recently.
+
+# Replying to recruiters and companies, in the same email thread.
+replies:
+  mode: auto # auto = send · draft = leave in Gmail Drafts · off
+  max_per_run: 10
+  # What the agent may tell recruiters. Leave a value empty ("") and, if asked, it drafts the reply and
+  # WhatsApps you instead of guessing. It never answers questions about money transfers, ID documents or
+  # bank details, and never accepts an offer.
+  facts:
+    notice_period: ""
+    current_ctc: ""
+    expected_ctc: ""
+    current_location: "Delhi"
+    preferred_locations: "Delhi, Noida, Gurugram"
+    open_to_relocation: "No"
+    available_to_join: ""
+  # When you can attend interviews. A proposed time inside these hours that is free in your Google Calendar is
+  # accepted and added to the calendar; anything else gets a reply offering free slots (left in Drafts for you).
+  availability:
+    days: [Mon, Tue, Wed, Thu, Fri, Sat]
+    start: "10:00"
+    end: "18:00"
+    min_notice_hours: 18
+
+calendar:
+  enabled: true
+  calendar_id: primary
+  reminders_minutes: [1440, 120, 30] # a day before, 2 hours before, 30 minutes before
+
+whatsapp:
+  enabled: true
+  provider: callmebot # or twilio (see README)
+  phone: "+91XXXXXXXXXX"
+  daily_summary: true # one message after each run; interviews and tests are messaged as they arrive
+
+timezone: Asia/Kolkata
+
 sources:
   # Company job boards with a public listing API. The slug is the part of the careers URL after the
   # domain: boards.greenhouse.io/<slug>, jobs.lever.co/<slug>, jobs.ashbyhq.com/<slug>.

@@ -6,15 +6,20 @@ import { OUTPUT_DIR } from "./config.js";
 import {
   classifyEmail,
   draftFollowUp,
+  type EmailClass,
   draftMaterials,
   extractJobsFromAlert,
   pool,
   scoreJob,
   type Materials,
 } from "./claude.js";
+import type { ApplyResult, SavedMaterials } from "./apply.js";
+import { whatsapp } from "./notify.js";
 import { writeCvDocx } from "./cv-docx.js";
+import { writeCvPdf } from "./cv-pdf.js";
 import { hardFilter } from "./filter.js";
 import { fetchNewMail, loadGmailState, saveGmailState, sendDigest } from "./gmail.js";
+import { actOnEmail, realDeps, type Deps } from "./replies.js";
 import { fetchAll, readManualFile } from "./sources/index.js";
 import type { Store } from "./store.js";
 import type { InboxEvent, Job, JobStatus, RawJob } from "./types.js";
@@ -111,8 +116,12 @@ export async function draftFor(job: Job, cfg: Config) {
   const { materials: m, track, warnings } = await draftMaterials(job, cfg);
   const dir = path.join(OUTPUT_DIR, today(), slug(`${job.company}-${job.title}`));
   fs.mkdirSync(dir, { recursive: true });
-  const cvFile = `${m.tailored_cv.name.trim().replace(/\s+/g, "_")}_CV_${slug(job.company, 30)}.docx`;
+  const base = `${m.tailored_cv.name.trim().replace(/\s+/g, "_")}_CV_${slug(job.company, 30)}`;
+  const cvFile = `${base}.docx`;
   await writeCvDocx(m.tailored_cv, path.join(dir, cvFile));
+  await writeCvPdf(m.tailored_cv, path.join(dir, `${base}.pdf`));
+  const saved: SavedMaterials = { subject: m.application_email.subject, body: m.application_email.body, pdf: `${base}.pdf`, warnings };
+  fs.writeFileSync(path.join(dir, "materials.json"), JSON.stringify(saved, null, 2));
   fs.writeFileSync(path.join(dir, "materials.md"), materialsMarkdown(job, m, track.name, path.basename(track.cv_path), cvFile, warnings));
   job.materialsDir = path.relative(process.cwd(), dir);
   return dir;
@@ -130,7 +139,7 @@ const STATUS_FOR: Record<string, JobStatus | undefined> = {
 const RANK: Partial<Record<JobStatus, number>> = { shortlisted: 0, applied: 1, assessment: 2, interview: 3, offer: 4, rejected: 5 };
 
 /** Reads new job alerts and recruiter replies from Gmail. Returns the inbox events found this run. */
-export async function gmailStep(store: Store, cfg: Config, fetchMail = fetchNewMail): Promise<InboxEvent[]> {
+export async function gmailStep(store: Store, cfg: Config, fetchMail = fetchNewMail, deps: Deps = realDeps): Promise<InboxEvent[]> {
   const g = cfg.gmail;
   if (!g?.enabled) return [];
   console.log("Checking Gmail...");
@@ -162,29 +171,43 @@ export async function gmailStep(store: Store, cfg: Config, fetchMail = fetchNewM
   const added = store.addRaw(raw);
   if (alerts.length) console.log(`  ${added.length} new job(s) from alerts`);
 
-  // Replies → status updates
+  // Replies → classify (in parallel), then act on each one in order: status, calendar, reply, WhatsApp.
   const events: InboxEvent[] = [];
   const activeList = active.map((j) => ({ id: j.id, company: j.company, title: j.title, status: j.status }));
-  const replyResults = await pool(replies, CONCURRENCY, async (mail) => {
-    const c = await classifyEmail(mail, activeList, cfg);
-    if (c.kind === "not_job_related") return;
+  const classified: (EmailClass | null)[] = new Array(replies.length).fill(null);
+  const replyResults = await pool(replies, CONCURRENCY, async (mail, i) => {
+    classified[i] = await classifyEmail(mail, activeList, cfg);
+  });
+  reportFailures(replyResults, replies, (m) => `email "${m.subject}"`);
+
+  const budget = { replies: cfg.replies.max_per_run };
+  for (const [i, mail] of replies.entries()) {
+    const c = classified[i];
+    if (!c || c.kind === "not_job_related") continue;
     const event: InboxEvent = { at: mail.date, from: mail.from, subject: mail.subject, kind: c.kind, summary: c.summary, action: c.action || undefined };
     events.push(event);
     const job = c.application_id !== "none" ? store.jobs[c.application_id] : undefined;
-    if (!job) {
+    if (job) {
+      event.jobId = job.id;
+      (job.inbox ??= []).push(event);
+      const next = STATUS_FOR[c.kind];
+      if (next && (RANK[next] ?? 0) > (RANK[job.status] ?? -1)) {
+        job.status = next;
+        if (next === "applied" && !job.appliedAt) job.appliedAt = mail.date;
+        console.log(`  ${job.company} — ${job.title}: now ${next}`);
+      }
+    } else {
       state.unmatched.push({ ...event, summary: `${c.company ? `${c.company}: ` : ""}${c.role ? `${c.role} — ` : ""}${c.summary}` });
-      return;
     }
-    event.jobId = job.id;
-    (job.inbox ??= []).push(event);
-    const next = STATUS_FOR[c.kind];
-    if (next && (RANK[next] ?? 0) > (RANK[job.status] ?? -1)) {
-      job.status = next;
-      if (next === "applied" && !job.appliedAt) job.appliedAt = mail.date;
-      console.log(`  ${job.company} — ${job.title}: now ${next}`);
+    try {
+      await actOnEmail(mail, c, job, event, store, cfg, budget, deps);
+      if (event.handled) console.log(`  ${c.kind.replace(/_/g, " ")} (${c.company || mail.fromAddress}): ${event.handled}`);
+    } catch (e) {
+      console.warn(`  ! could not act on "${mail.subject}": ${(e as Error).message}`);
+      await deps.notify(cfg, `⚠️ Job agent could not handle an email: "${mail.subject}" from ${mail.from}. Please check it.`);
     }
-  });
-  reportFailures(replyResults, replies, (m) => `email "${m.subject}"`);
+    store.save();
+  }
 
   state.lastCheck = startedAt;
   saveGmailState(state);
@@ -221,9 +244,30 @@ export async function digestStep(store: Store, cfg: Config, fresh: Job[], events
   console.log(`Digest emailed to ${g.address}`);
 }
 
+/** One short WhatsApp message summing up the run. Interview and test alerts are sent separately as they happen. */
+export async function whatsappSummary(store: Store, cfg: Config, fresh: Job[], applied: ApplyResult, notify = whatsapp) {
+  if (!cfg.whatsapp?.enabled || !cfg.whatsapp.daily_summary) return;
+  const portal = applied.portal.filter((j) => fresh.includes(j));
+  const due = followUpsDue(store, cfg);
+  if (!fresh.length && !applied.sent.length && !applied.held.length && !due.length) return;
+  const lines = [
+    `🤖 Job agent — ${today()}`,
+    `${fresh.length} new match${fresh.length === 1 ? "" : "es"} with tailored CVs.`,
+    ...(applied.sent.length ? [`✅ Applied by email: ${applied.sent.map((j) => `${j.company} (${j.title})`).join(", ")}`] : []),
+    ...(applied.drafted.length ? [`✉️ In Gmail Drafts: ${applied.drafted.map((j) => j.company).join(", ")}`] : []),
+    ...(applied.held.some((h) => !h.reason.startsWith("⚠️"))
+      ? [`✋ Drafted, need your check first: ${applied.held.filter((h) => !h.reason.startsWith("⚠️")).map((h) => `${h.job.company} (${h.reason})`).join("; ")}`]
+      : []),
+    ...applied.held.filter((h) => h.reason.startsWith("⚠️")).map((h) => `⚠️ Skipped ${h.job.company} — ${h.job.title}: ${h.reason.replace(/^⚠️ red flags, not applying: /, "")}`),
+    ...(portal.length ? ["", "Apply on the website (CV ready in your email digest):", ...portal.slice(0, 8).map((j) => `• ${j.company} — ${j.title}${j.url ? `\n  ${j.url}` : ""}`)] : []),
+    ...(due.length ? [`⏰ ${due.length} follow-up(s) due.`] : []),
+  ];
+  await notify(cfg, lines.join("\n"));
+}
+
 // ---------- Report / follow-ups / export ----------
 
-export function writeReport(store: Store, cfg: Config, events: InboxEvent[] = []): string {
+export function writeReport(store: Store, cfg: Config, events: InboxEvent[] = [], applied?: ApplyResult): string {
   const dir = path.join(OUTPUT_DIR, today());
   fs.mkdirSync(dir, { recursive: true });
   const short = store.byStatus("shortlisted").sort((a, b) => (b.score?.overall ?? 0) - (a.score?.overall ?? 0));
@@ -251,6 +295,16 @@ export function writeReport(store: Store, cfg: Config, events: InboxEvent[] = []
       return `| ${j.score?.overall} | ${esc(j.company)} | [${esc(j.title)}](${j.url}) | ${esc(j.location)} | ${esc(j.score?.best_track ?? "")} | ${why} | ${mat} | \`${j.id}\` |`;
     }),
     "",
+    ...(applied && (applied.sent.length || applied.drafted.length || applied.held.length)
+      ? [
+          "## Applications by email (this run)",
+          "",
+          ...applied.sent.map((j) => `- ✅ Sent: ${j.company} — ${j.title} → ${j.score?.apply_email}`),
+          ...applied.drafted.map((j) => `- ✉️ In Gmail Drafts: ${j.company} — ${j.title} → ${j.score?.apply_email}`),
+          ...applied.held.map((h) => `- ✋ Drafted, needs your check: ${h.job.company} — ${h.job.title} (${h.reason})`),
+          "",
+        ]
+      : []),
     ...(events.some((ev) => ev.jobId)
       ? ["## Inbox updates on your applications (this run)", "", ...events.filter((ev) => ev.jobId).map((ev) => `- **${ev.kind.replace(/_/g, " ")}** — ${ev.jobId ? `${store.jobs[ev.jobId]?.company}: ` : ""}${ev.summary}${ev.action ? ` → _${ev.action}_` : ""}`), ""]
       : []),

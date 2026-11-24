@@ -4,3 +4,4 @@ cvs/
 data/
 output/
 .env
+google-credentials.json
