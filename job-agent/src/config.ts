@@ -3,15 +3,27 @@ import path from "node:path";
 import YAML from "yaml";
 import { z } from "zod";
 
+const TrackSchema = z.object({
+  // Short name, e.g. "Operations". Shown in reports and used to pick the CV.
+  name: z.string(),
+  // The CV written for this kind of role (.pdf, .md or .txt).
+  cv_path: z.string(),
+  // A job belongs to this track if every word of any phrase appears in its title.
+  titles: z.array(z.string()).min(1),
+});
+export type Track = z.infer<typeof TrackSchema>;
+
 const ConfigSchema = z.object({
   profile: z.object({
-    cv_path: z.string(),
     // A few lines on what you want next, in your own words. Sent to Claude with the CV.
     goals: z.string().default(""),
-    target_titles: z.array(z.string()).default([]),
+    tracks: z.array(TrackSchema).min(1),
     locations: z.array(z.string()).default([]),
-    remote_ok: z.boolean().default(true),
+    remote_ok: z.boolean().default(false),
+    // Dropped if any of these appear anywhere in the title or description.
     exclude_keywords: z.array(z.string()).default([]),
+    // Dropped if any of these appear in the title only (e.g. "developer" for non-tech searches).
+    exclude_title_keywords: z.array(z.string()).default([]),
     exclude_companies: z.array(z.string()).default([]),
     max_age_days: z.number().default(14),
   }),
@@ -29,6 +41,29 @@ const ConfigSchema = z.object({
         .optional(),
     })
     .default({ greenhouse: [], lever: [], ashby: [] }),
+  gmail: z
+    .object({
+      enabled: z.boolean().default(true),
+      address: z.string(), // the password comes from GMAIL_APP_PASSWORD
+      lookback_days: z.number().default(3), // first run only; later runs continue from the last check
+      // Read job-alert emails from these senders and turn them into jobs.
+      alert_senders: z
+        .array(z.string())
+        .default([
+          "jobalerts-noreply@linkedin.com",
+          "jobs-noreply@linkedin.com",
+          "naukri.com",
+          "indeed.com",
+          "foundit.in",
+          "apna.co",
+        ]),
+      // Scan other mail for recruiter replies, interview invites and rejections.
+      track_replies: z.boolean().default(true),
+      // Email yourself the daily report, with tailored CVs attached.
+      send_digest: z.boolean().default(true),
+      max_emails_per_run: z.number().default(60),
+    })
+    .optional(),
   scoring: z
     .object({
       weights: z
@@ -67,5 +102,12 @@ export function loadConfig(file = path.join(ROOT, "config.yaml")): Config {
   if (!parsed.success) {
     throw new Error(`config.yaml is invalid:\n${z.prettifyError(parsed.error)}`);
   }
+  for (const t of parsed.data.profile.tracks) {
+    if (!fs.existsSync(path.resolve(t.cv_path))) throw new Error(`CV for track "${t.name}" not found: ${t.cv_path}`);
+  }
   return parsed.data;
+}
+
+export function trackByName(cfg: Config, name: string | undefined): Track {
+  return cfg.profile.tracks.find((t) => t.name === name) ?? cfg.profile.tracks[0];
 }

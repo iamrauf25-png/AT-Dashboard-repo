@@ -1,15 +1,35 @@
+import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import type { Config } from "./config.js";
 import { OUTPUT_DIR } from "./config.js";
-import { draftFollowUp, draftMaterials, pool, scoreJob, type Materials } from "./claude.js";
+import {
+  classifyEmail,
+  draftFollowUp,
+  draftMaterials,
+  extractJobsFromAlert,
+  pool,
+  scoreJob,
+  type Materials,
+} from "./claude.js";
+import { writeCvDocx } from "./cv-docx.js";
 import { hardFilter } from "./filter.js";
+import { fetchNewMail, loadGmailState, saveGmailState, sendDigest } from "./gmail.js";
 import { fetchAll, readManualFile } from "./sources/index.js";
 import type { Store } from "./store.js";
-import type { Job } from "./types.js";
+import type { InboxEvent, Job, JobStatus, RawJob } from "./types.js";
 
 const today = () => new Date().toISOString().slice(0, 10);
 const CONCURRENCY = 4;
+const ACTIVE: JobStatus[] = ["shortlisted", "applied", "assessment", "interview", "offer"];
+
+function reportFailures<T>(results: PromiseSettledResult<unknown>[], items: T[], label: (t: T) => string) {
+  results.forEach((r, i) => {
+    if (r.status === "rejected") console.warn(`  ! ${label(items[i])}: ${(r.reason as Error).message}`);
+  });
+}
+
+// ---------- Fetch / filter / score ----------
 
 export async function fetchStep(store: Store, cfg: Config, importFiles: string[] = []) {
   console.log("Fetching jobs...");
@@ -61,12 +81,12 @@ export async function scoreStep(store: Store, cfg: Config) {
     store.save();
   });
   process.stdout.write("\n");
-  results.forEach((r, i) => {
-    if (r.status === "rejected") console.warn(`  ! ${queue[i].company} - ${queue[i].title}: ${(r.reason as Error).message}`);
-  });
+  reportFailures(results, queue, (j) => `${j.company} - ${j.title}`);
 }
 
-export async function shortlistStep(store: Store, cfg: Config) {
+// ---------- Shortlist + materials ----------
+
+export async function shortlistStep(store: Store, cfg: Config): Promise<Job[]> {
   const picks = store
     .byStatus("scored")
     .filter((j) => (j.score?.overall ?? 0) >= cfg.scoring.min_score && j.score?.verdict !== "weak")
@@ -76,34 +96,139 @@ export async function shortlistStep(store: Store, cfg: Config) {
     console.log(`Shortlist: no scored job reached ${cfg.scoring.min_score}`);
     return [];
   }
-  console.log(`Drafting materials for the top ${picks.length}...`);
+  console.log(`Tailoring CVs and drafting materials for the top ${picks.length}...`);
   const results = await pool(picks, CONCURRENCY, async (job) => {
     await draftFor(job, cfg);
     job.status = "shortlisted";
     store.save();
   });
-  results.forEach((r, i) => {
-    if (r.status === "rejected") console.warn(`  ! ${picks[i].company} - ${picks[i].title}: ${(r.reason as Error).message}`);
-  });
+  reportFailures(results, picks, (j) => `${j.company} - ${j.title}`);
   return picks.filter((_, i) => results[i].status === "fulfilled");
 }
 
+/** Writes output/<date>/<company-role>/materials.md and a tailored CV (.docx). Returns the folder. */
 export async function draftFor(job: Job, cfg: Config) {
-  const m = await draftMaterials(job, cfg);
+  const { materials: m, track, warnings } = await draftMaterials(job, cfg);
   const dir = path.join(OUTPUT_DIR, today(), slug(`${job.company}-${job.title}`));
   fs.mkdirSync(dir, { recursive: true });
-  fs.writeFileSync(path.join(dir, "materials.md"), materialsMarkdown(job, m));
+  const cvFile = `${m.tailored_cv.name.trim().replace(/\s+/g, "_")}_CV_${slug(job.company, 30)}.docx`;
+  await writeCvDocx(m.tailored_cv, path.join(dir, cvFile));
+  fs.writeFileSync(path.join(dir, "materials.md"), materialsMarkdown(job, m, track.name, path.basename(track.cv_path), cvFile, warnings));
   job.materialsDir = path.relative(process.cwd(), dir);
   return dir;
 }
 
-export function writeReport(store: Store, cfg: Config): string {
+// ---------- Gmail ----------
+
+const STATUS_FOR: Record<string, JobStatus | undefined> = {
+  application_received: "applied",
+  assessment: "assessment",
+  interview_invite: "interview",
+  offer: "offer",
+  rejection: "rejected",
+};
+const RANK: Partial<Record<JobStatus, number>> = { shortlisted: 0, applied: 1, assessment: 2, interview: 3, offer: 4, rejected: 5 };
+
+/** Reads new job alerts and recruiter replies from Gmail. Returns the inbox events found this run. */
+export async function gmailStep(store: Store, cfg: Config, fetchMail = fetchNewMail): Promise<InboxEvent[]> {
+  const g = cfg.gmail;
+  if (!g?.enabled) return [];
+  console.log("Checking Gmail...");
+  const state = loadGmailState();
+  const startedAt = new Date().toISOString();
+  const active = store.byStatus(...ACTIVE);
+  const { alerts, replies } = await fetchMail(g, state, [...new Set(active.map((j) => j.company))]);
+  console.log(`  ${alerts.length} job-alert email(s), ${replies.length} possible recruiter email(s)`);
+
+  // Job alerts → jobs
+  const raw: RawJob[] = [];
+  const alertResults = await pool(alerts, CONCURRENCY, async (mail) => {
+    for (const j of await extractJobsFromAlert(mail, cfg)) {
+      raw.push({
+        source: "gmail",
+        sourceId: createHash("sha1").update(j.url || `${j.company}|${j.title}`).digest("hex").slice(0, 10),
+        company: j.company,
+        title: j.title,
+        location: j.location,
+        remote: /remote|work from home/i.test(j.location),
+        url: j.url,
+        description: `${j.summary}\n(From a job-alert email: ${mail.subject})`,
+        snippetOnly: true,
+        postedAt: mail.date,
+      });
+    }
+  });
+  reportFailures(alertResults, alerts, (m) => `alert "${m.subject}"`);
+  const added = store.addRaw(raw);
+  if (alerts.length) console.log(`  ${added.length} new job(s) from alerts`);
+
+  // Replies → status updates
+  const events: InboxEvent[] = [];
+  const activeList = active.map((j) => ({ id: j.id, company: j.company, title: j.title, status: j.status }));
+  const replyResults = await pool(replies, CONCURRENCY, async (mail) => {
+    const c = await classifyEmail(mail, activeList, cfg);
+    if (c.kind === "not_job_related") return;
+    const event: InboxEvent = { at: mail.date, from: mail.from, subject: mail.subject, kind: c.kind, summary: c.summary, action: c.action || undefined };
+    events.push(event);
+    const job = c.application_id !== "none" ? store.jobs[c.application_id] : undefined;
+    if (!job) {
+      state.unmatched.push({ ...event, summary: `${c.company ? `${c.company}: ` : ""}${c.role ? `${c.role} — ` : ""}${c.summary}` });
+      return;
+    }
+    event.jobId = job.id;
+    (job.inbox ??= []).push(event);
+    const next = STATUS_FOR[c.kind];
+    if (next && (RANK[next] ?? 0) > (RANK[job.status] ?? -1)) {
+      job.status = next;
+      if (next === "applied" && !job.appliedAt) job.appliedAt = mail.date;
+      console.log(`  ${job.company} — ${job.title}: now ${next}`);
+    }
+  });
+  reportFailures(replyResults, replies, (m) => `email "${m.subject}"`);
+
+  state.lastCheck = startedAt;
+  saveGmailState(state);
+  store.save();
+  return events;
+}
+
+export async function digestStep(store: Store, cfg: Config, fresh: Job[], events: InboxEvent[], send = sendDigest) {
+  const g = cfg.gmail;
+  if (!g?.enabled || !g.send_digest) return;
+  const due = followUpsDue(store, cfg);
+  if (!fresh.length && !events.length && !due.length) return console.log("Digest: nothing new, not sent");
+
+  const e = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const attachments: { filename: string; path: string }[] = [];
+  const jobs = fresh.map((j) => {
+    const dir = j.materialsDir ? path.resolve(j.materialsDir) : "";
+    const files = dir && fs.existsSync(dir) ? fs.readdirSync(dir) : [];
+    for (const f of files.filter((f) => f.endsWith(".docx"))) attachments.push({ filename: f, path: path.join(dir, f) });
+    const recruiter = dir ? (fs.readFileSync(path.join(dir, "materials.md"), "utf8").match(/## Recruiter message\n\n([\s\S]*?)\n\n##/)?.[1] ?? "") : "";
+    return `<li><b>${j.score?.overall}</b> · <a href="${e(j.url)}">${e(j.title)}</a> — ${e(j.company)}, ${e(j.location)}<br>
+      <small>CV: ${e(j.score?.best_track ?? "")} · ${e(j.score?.reasons[0] ?? "")}${j.snippetOnly ? " · <i>alert summary only: open the link and run <code>jd</code> for a full tailoring</i>" : ""}</small>
+      ${recruiter ? `<br><small>Recruiter note: ${e(recruiter)}</small>` : ""}<br><small><code>${e(j.id)}</code></small></li>`;
+  });
+  const html = `<div style="font-family:Arial,sans-serif;font-size:14px">
+    <h2>Job hunt — ${today()}</h2>
+    ${fresh.length ? `<h3>New matches (${fresh.length})</h3><ol>${jobs.join("")}</ol><p>Tailored CVs are attached. Full cover notes and interview prep are in each job's <code>materials.md</code>.</p>` : ""}
+    ${events.length ? `<h3>Inbox updates</h3><ul>${events.map((ev) => `<li><b>${e(ev.kind.replace(/_/g, " "))}</b>: ${e(ev.summary)}${ev.action ? `<br><small>Next: ${e(ev.action)}</small>` : ""}</li>`).join("")}</ul>` : ""}
+    ${due.length ? `<h3>Follow-ups due</h3><ul>${due.map((j) => `<li>${e(j.company)} — ${e(j.title)} (applied ${j.appliedAt?.slice(0, 10)})</li>`).join("")}</ul><p>Run <code>npm run job -- followups</code> to draft them.</p>` : ""}
+  </div>`;
+  const text = html.replace(/<br>/g, "\n").replace(/<\/(li|h2|h3|p)>/g, "\n").replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">");
+  const subject = `Job hunt ${today()}: ${fresh.length} new match${fresh.length === 1 ? "" : "es"}${events.length ? `, ${events.length} inbox update(s)` : ""}`;
+  await send(g, { subject, html, text, attachments: attachments.slice(0, 15) });
+  console.log(`Digest emailed to ${g.address}`);
+}
+
+// ---------- Report / follow-ups / export ----------
+
+export function writeReport(store: Store, cfg: Config, events: InboxEvent[] = []): string {
   const dir = path.join(OUTPUT_DIR, today());
   fs.mkdirSync(dir, { recursive: true });
-  const short = store
-    .byStatus("shortlisted")
-    .sort((a, b) => (b.score?.overall ?? 0) - (a.score?.overall ?? 0));
+  const short = store.byStatus("shortlisted").sort((a, b) => (b.score?.overall ?? 0) - (a.score?.overall ?? 0));
   const due = followUpsDue(store, cfg);
+  const unmatched = cfg.gmail?.enabled ? loadGmailState().unmatched.slice(-10).reverse() : [];
   const counts = Object.values(store.jobs).reduce<Record<string, number>>((acc, j) => {
     acc[j.status] = (acc[j.status] ?? 0) + 1;
     return acc;
@@ -112,29 +237,36 @@ export function writeReport(store: Store, cfg: Config): string {
   const lines = [
     `# Job hunt — ${today()}`,
     "",
-    `Pipeline: ${["shortlisted", "applied", "interview", "offer", "rejected", "scored", "filtered_out"]
+    `Pipeline: ${["shortlisted", "applied", "assessment", "interview", "offer", "rejected", "scored", "filtered_out"]
       .map((s) => `${s} ${counts[s] ?? 0}`)
       .join(" · ")}`,
     "",
     `## Shortlist (not yet applied)`,
     "",
-    short.length ? "| Score | Company | Role | Location | Why | Materials | ID |" : "_Nothing shortlisted._",
-    short.length ? "|---|---|---|---|---|---|---|" : "",
+    short.length ? "| Score | Company | Role | Location | Use CV | Why | Materials | ID |" : "_Nothing shortlisted._",
+    short.length ? "|---|---|---|---|---|---|---|---|" : "",
     ...short.map((j) => {
-      const why = (j.score?.reasons[0] ?? "").replace(/\|/g, "/");
+      const why = esc(j.score?.reasons[0] ?? "") + (j.snippetOnly ? " _(alert summary only)_" : "");
       const mat = j.materialsDir ? `[open](${path.relative(dir, path.join(process.cwd(), j.materialsDir, "materials.md"))})` : "";
-      return `| ${j.score?.overall} | ${esc(j.company)} | [${esc(j.title)}](${j.url}) | ${esc(j.location)} | ${esc(why)} | ${mat} | \`${j.id}\` |`;
+      return `| ${j.score?.overall} | ${esc(j.company)} | [${esc(j.title)}](${j.url}) | ${esc(j.location)} | ${esc(j.score?.best_track ?? "")} | ${why} | ${mat} | \`${j.id}\` |`;
     }),
     "",
+    ...(events.some((ev) => ev.jobId)
+      ? ["## Inbox updates on your applications (this run)", "", ...events.filter((ev) => ev.jobId).map((ev) => `- **${ev.kind.replace(/_/g, " ")}** — ${ev.jobId ? `${store.jobs[ev.jobId]?.company}: ` : ""}${ev.summary}${ev.action ? ` → _${ev.action}_` : ""}`), ""]
+      : []),
+    ...(unmatched.length
+      ? ["## Recruiter emails not tied to a tracked job", "", ...unmatched.map((ev) => `- ${ev.at.slice(0, 10)} · ${ev.summary}${ev.action ? ` → _${ev.action}_` : ""}`), ""]
+      : []),
     `## Follow-ups due (applied ${cfg.follow_up_days}+ days ago, no update)`,
     "",
     ...(due.length ? due.map((j) => `- ${j.company} — ${j.title} (applied ${j.appliedAt?.slice(0, 10)}) \`${j.id}\``) : ["_None._"]),
     "",
     "## Next steps",
     "",
-    "1. Open each materials file, edit anything that doesn't sound like you, and apply on the company's site.",
-    "2. Record it: `npm run job -- mark <id> applied`",
-    "3. Not interested: `npm run job -- mark <id> skipped`",
+    "1. Open each materials file and the tailored CV next to it; edit anything that doesn't sound like you, then apply.",
+    "2. Jobs marked _alert summary only_: open the link, copy the full job description into a .txt file, and run `npm run job -- jd <id> <file>` to re-score and re-tailor.",
+    "3. Record it: `npm run job -- mark <id> applied` (replies from the company are picked up from Gmail automatically).",
+    "4. Not interested: `npm run job -- mark <id> skipped`",
     "",
   ];
   const file = path.join(dir, "report.md");
@@ -161,9 +293,7 @@ export async function followUpStep(store: Store, cfg: Config) {
     job.followUpDraftedAt = new Date().toISOString();
     parts.push(`## ${job.company} — ${job.title}`, "", `Applied ${job.appliedAt?.slice(0, 10)} · ${job.url}`, "", "**Email**", "", f.email, "", "**LinkedIn**", "", f.linkedin, "");
   });
-  results.forEach((r, i) => {
-    if (r.status === "rejected") console.warn(`  ! ${due[i].company}: ${(r.reason as Error).message}`);
-  });
+  reportFailures(results, due, (j) => j.company);
   store.save();
   const file = path.join(dir, "follow-ups.md");
   fs.writeFileSync(file, parts.join("\n"));
@@ -171,31 +301,45 @@ export async function followUpStep(store: Store, cfg: Config) {
 }
 
 export function exportCsv(store: Store): string {
-  const cols = ["id", "status", "score", "company", "title", "location", "url", "appliedAt", "firstSeen", "filterReason"];
+  const cols = ["id", "status", "score", "cv_track", "company", "title", "location", "url", "appliedAt", "lastEmail", "firstSeen"];
   const q = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
   const rows = Object.values(store.jobs)
     .filter((j) => j.status !== "filtered_out")
-    .map((j) => [j.id, j.status, j.score?.overall, j.company, j.title, j.location, j.url, j.appliedAt, j.firstSeen, j.filterReason].map(q).join(","));
+    .map((j) => {
+      const last = j.inbox?.at(-1);
+      return [j.id, j.status, j.score?.overall, j.score?.best_track, j.company, j.title, j.location, j.url, j.appliedAt, last ? `${last.kind}: ${last.summary}` : "", j.firstSeen]
+        .map(q)
+        .join(",");
+    });
   fs.mkdirSync(OUTPUT_DIR, { recursive: true });
   const file = path.join(OUTPUT_DIR, "tracker.csv");
   fs.writeFileSync(file, [cols.join(","), ...rows].join("\n"));
   return file;
 }
 
-function materialsMarkdown(job: Job, m: Materials): string {
+function materialsMarkdown(job: Job, m: Materials, trackName: string, baseCv: string, cvFile: string, warnings: string[]): string {
   const s = job.score;
   return [
     `# ${job.title} — ${job.company}`,
     "",
-    `- Link: ${job.url}`,
+    `- Link: ${job.url || "(none)"}`,
     `- Location: ${job.location || "not stated"}${job.remote ? " (remote possible)" : ""}`,
     job.salary ? `- Salary: ${job.salary}` : null,
     s ? `- Score: **${s.overall}** (skills ${s.skills_match}, seniority ${s.seniority_fit}, domain ${s.domain_fit}, logistics ${s.logistics_fit}) — ${s.verdict}` : null,
+    `- Built from your **${trackName}** CV (${baseCv}) → tailored CV: **${cvFile}**`,
     `- Tracker ID: \`${job.id}\``,
     "",
+    job.snippetOnly
+      ? "> ⚠ Only a short summary of this job was available, so the tailoring is light. Paste the full job description into a file and run `npm run job -- jd " + job.id + " <file>` to redo it.\n"
+      : null,
+    warnings.length ? `> ⚠ Check the tailored CV:\n${warnings.map((w) => `> - ${w}`).join("\n")}\n` : null,
     s ? `**Why it fits:** ${s.reasons.join("; ")}.` : null,
     s?.gaps.length ? `**Gaps:** ${s.gaps.join("; ")}.` : null,
     s?.red_flags.length ? `**Red flags:** ${s.red_flags.join("; ")}.` : null,
+    "",
+    "## What changed in the CV for this job",
+    "",
+    ...m.changes_made.map((c) => `- ${c}`),
     "",
     "## Cover note",
     "",
@@ -205,11 +349,13 @@ function materialsMarkdown(job: Job, m: Materials): string {
     "",
     m.recruiter_message,
     "",
-    "## CV bullets to use",
+    "## Application email",
     "",
-    ...m.cv_bullets.map((b) => `- ${b}`),
+    `**Subject:** ${m.application_email.subject}`,
     "",
-    "## Keywords to include",
+    m.application_email.body,
+    "",
+    "## Keywords from the job description your CV covers",
     "",
     m.keywords.join(", "),
     "",
@@ -228,4 +374,4 @@ function materialsMarkdown(job: Job, m: Materials): string {
 }
 
 const esc = (s: string) => s.replace(/\|/g, "/").replace(/\n/g, " ");
-const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
+const slug = (s: string, max = 60) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, max);

@@ -1,52 +1,137 @@
 # Copy to config.yaml (kept out of git) and edit.
 
 profile:
-  # Your CV as .md, .txt or .pdf. Keep the real file out of git (cv.* is ignored).
-  cv_path: ./cv.md
   # In your own words: what you want next. Claude reads this with your CV when scoring and writing.
   goals: >
-    Operations / team-lead roles managing 10+ people, in Delhi NCR (Gurugram, Noida, Delhi)
-    or remote within India. Prefer retail, e-commerce, quick commerce or logistics.
-    Not interested in pure sales or field-sales targets.
-  # A job passes if every word of any phrase appears in its title ("operations manager" matches "Manager - Operations").
-  target_titles:
-    - operations manager
-    - operations lead
-    - operations head
-    - store manager
-    - cluster manager
-    - area manager
-    - team lead operations
-    - program manager operations
-    - business operations
-  # Location must contain one of these, unless remote_ok and the job is remote.
-  locations: [Delhi, Gurugram, Gurgaon, Noida, NCR, Faridabad, Ghaziabad]
-  remote_ok: true
-  exclude_keywords: [commission only, unpaid, internship, "door to door"]
+    About five years across marketplace / e-commerce operations (Amazon, Flipkart, Blinkit,
+    Swiggy Instamart, Shopify), floor and team supervision, recruitment operations and client sales.
+    Looking for Operations, Team Leader, E-commerce Executive / Manager, Sales Team Lead and
+    Business Growth roles in Delhi, Noida or Gurugram (Gurgaon), on-site or hybrid.
+    Best fit: executive, senior executive, assistant manager and team-lead level roles asking
+    for roughly 2-6 years of experience. Not looking for pure field sales, telecalling or
+    commission-only roles.
+
+  # One track per CV. A job joins every track whose title phrases it matches (all words of a phrase must
+  # appear in the job title, in any order; "E-commerce"/"Ecommerce" and "Gurgaon"/"Gurugram" are treated
+  # as the same). Claude then picks the best CV for the job and tailors that one.
+  tracks:
+    - name: Operations
+      cv_path: ./cvs/1-operations.pdf
+      titles:
+        - operations executive
+        - operations manager
+        - operations lead
+        - operations coordinator
+        - operations associate
+        - operations specialist
+        - assistant manager operations
+        - supply chain executive
+        - inventory executive
+        - inventory manager
+        - warehouse executive
+        - dispatch executive
+        - logistics executive
+        - procurement executive
+        - purchase executive
+    - name: Team Leader
+      cv_path: ./cvs/2-team-leader.pdf
+      titles:
+        - team leader
+        - team lead
+        - floor manager
+        - floor supervisor
+        - shift supervisor
+        - shift lead
+        - store supervisor
+        - operations supervisor
+        - centre manager
+        - center manager
+    - name: E-commerce
+      cv_path: ./cvs/3-ecommerce.pdf
+      titles:
+        - ecommerce
+        - marketplace executive
+        - marketplace manager
+        - marketplace operations
+        - online sales executive
+        - online sales manager
+        - catalog executive
+        - catalogue executive
+        - category executive
+        - quick commerce
+        - d2c
+        - amazon account manager
+        - key account manager ecommerce
+    - name: Sales Team Lead
+      cv_path: ./cvs/4-sales-team-lead.pdf
+      titles:
+        - sales team lead
+        - sales team leader
+        - team leader sales
+        - sales manager
+        - sales supervisor
+        - inside sales lead
+        - senior sales executive
+        - client relationship manager
+        - customer success manager
+    - name: Business Growth
+      cv_path: ./cvs/5-business-growth.pdf
+      titles:
+        - business growth
+        - growth manager
+        - growth executive
+        - business development manager
+        - business development executive
+        - business development associate
+        - key account manager
+        - account manager
+        - channel manager
+        - partnerships manager
+
+  # A job must be in one of these places (or remote, if remote_ok).
+  locations: [Delhi, Noida, Gurugram, NCR]
+  remote_ok: false
+  exclude_keywords: [commission only, commission-based only, unpaid, internship, door to door, registration fee, security deposit]
+  exclude_title_keywords: [developer, engineer, software, java, python, nurse, teacher, doctor, driver, delivery boy, telecaller, intern]
   exclude_companies: []
   max_age_days: 14
 
+gmail:
+  enabled: true
+  address: your.address@gmail.com # the app password goes in .env as GMAIL_APP_PASSWORD
+  lookback_days: 3 # first run only; later runs continue from the last check
+  track_replies: true # read recruiter replies, interview invites, rejections
+  send_digest: true # email yourself the daily shortlist with tailored CVs attached
+  # Job-alert senders (defaults cover LinkedIn, Naukri, Indeed, foundit and apna). Set up alerts on those
+  # sites for your five job types and Delhi / Noida / Gurugram, and they flow in automatically.
+  # alert_senders: [jobalerts-noreply@linkedin.com, jobs-noreply@linkedin.com, naukri.com, indeed.com, foundit.in, apna.co]
+
 sources:
-  # Company job boards that publish a public listing API. The slug is the part of the
-  # careers URL after the domain, e.g. boards.greenhouse.io/<slug>, jobs.lever.co/<slug>,
-  # jobs.ashbyhq.com/<slug>. Add the companies you'd like to work for.
+  # Company job boards with a public listing API. The slug is the part of the careers URL after the
+  # domain: boards.greenhouse.io/<slug>, jobs.lever.co/<slug>, jobs.ashbyhq.com/<slug>.
   greenhouse: []
   lever: []
   ashby: []
   # Adzuna aggregates many Indian job sites. Free key at developer.adzuna.com;
-  # put ADZUNA_APP_ID and ADZUNA_APP_KEY in your environment (or .env).
+  # put ADZUNA_APP_ID and ADZUNA_APP_KEY in .env.
   adzuna:
     country: in
     max_days_old: 7
     searches:
-      - { what: "operations manager", where: "Delhi" }
-      - { what: "operations manager", where: "Gurgaon" }
-      - { what: "operations manager", where: "Noida" }
-      - { what: "store manager", where: "Delhi" }
+      - { what: "operations executive", where: "Delhi" }
+      - { what: "operations executive", where: "Noida" }
+      - { what: "operations executive", where: "Gurgaon" }
+      - { what: "team leader", where: "Delhi" }
+      - { what: "ecommerce executive", where: "Delhi" }
+      - { what: "ecommerce manager", where: "Gurgaon" }
+      - { what: "marketplace executive", where: "Noida" }
+      - { what: "sales team lead", where: "Delhi" }
+      - { what: "business development manager", where: "Gurgaon" }
+      - { what: "business growth manager", where: "Noida" }
 
 scoring:
   weights: { skills_match: 0.4, seniority_fit: 0.2, domain_fit: 0.2, logistics_fit: 0.2 }
-  top_n: 10 # how many jobs get tailored materials per run
+  top_n: 10 # how many jobs get a tailored CV and materials per run
   min_score: 60 # never shortlist below this
   max_jobs_per_run: 80 # cap on Claude scoring calls per run (newest first)
 

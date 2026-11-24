@@ -1,7 +1,6 @@
 node_modules/
 config.yaml
+cvs/
 data/
 output/
-cv.*
-!cv.example.md
 .env

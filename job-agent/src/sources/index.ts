@@ -137,6 +137,7 @@ export async function fetchAdzuna(cfg: NonNullable<Config["sources"]["adzuna"]>)
         url: j.redirect_url,
         // Adzuna returns a snippet, not the full description; scoring notes that.
         description: htmlToText(j.description ?? ""),
+        snippetOnly: true,
         postedAt: j.created,
         salary: j.salary_min ? `${j.salary_min}-${j.salary_max ?? "?"}` : undefined,
       });
