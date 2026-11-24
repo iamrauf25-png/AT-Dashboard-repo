@@ -311,3 +311,35 @@ Bhoot vs Machchhar 🦟 कौन जीता? | Dadi vs Bhoot
 
 #DadiVsBhoot #bhoot #reels #hindicartoon #shorts
 ```
+
+---
+
+## Bonus: the two Instagram Reels, also posted as YouTube Shorts
+
+### Tue 24 Nov, 7:30 pm · `instagram/reel-01-har-ghar-ki-dadi.mp4`
+**Title**
+```
+हर घर में एक ऐसी दादी होती है 😂 | Dadi vs Bhoot | Ultra Pro Max Dadi
+```
+**Description**
+```
+हर घर में एक ऐसी दादी होती है… जिससे भूत भी डरता है 😂👻 200 साल का भूत vs 75 साल की Ultra Pro Max दादी!
+ये Short अपनी दादी या उस cousin को भेजो जिसकी दादी भी ऐसी है 👵
+
+कल: कुएँ से कोई और आ रहा है 👀 Subscribe करो!
+
+#DadiVsBhoot #dadi #bhoot #horrorcomedy #shorts
+```
+
+### Wed 25 Nov, 12:30 pm · `instagram/reel-02-kuen-se-kaun.mp4`  *(d01 still goes out at 7:30 pm)*
+**Title**
+```
+कुएँ से कौन आया? 👀 मिलिए चाँदनी चुड़ैल से | Dadi vs Bhoot
+```
+**Description**
+```
+कल कहा था ना… कुएँ से कोई आ रहा है 👀 मिलिए चाँदनी से, 300 साल से कुएँ में रहने वाली चुड़ैल! भूत डर गया… पर दादी? 😂
+उसे भेजो जो चुड़ैलों से डरता है 👇
+
+#DadiVsBhoot #chudail #bhoot #hindicartoon #shorts
+```
