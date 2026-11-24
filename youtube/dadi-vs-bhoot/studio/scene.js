@@ -17,7 +17,7 @@
     wall: '#5a4a3a', wallDark: '#463a2e', ground: '#231e19', cot: '#6b4a2b', rope: '#b99b6b',
     ink: '#120b08', skin: '#9a6444', skinDark: '#7c4e33', saree: '#f2eee6', border: '#8e1f2a', hair: '#e8e8e8',
     ghost: '#d7f3ff', ghostEdge: '#7fd3ea', ghostInk: '#1d3b48',
-    caption: { DADI: '#ffd27a', CHAMAN: '#a8f0ff', NARRATOR: '#ffffff' },
+    caption: { DADI: '#ffd27a', CHAMAN: '#a8f0ff', CHANDNI: '#e3c4ff', NARRATOR: '#ffffff' },
   };
   const FONT = '"Baloo 2"';
 
@@ -40,6 +40,7 @@
       dark: 0, flash: 0, shake: 0, fog: 1, overlay: null,
       ghost: { x: L.ghostHome.x, y: L.ghostHome.y, scale: 1, alpha: 0, rot: 0, wig: false, pose: 'float', expr: 'evil', look: [0.6, 0.3], tremble: 0, feet: false, eyesOnly: false },
       dadi: { pose: 'sit', expr: 'flat', prop: 'chai', look: [0, 0], facepack: false, x: L.dadi.x, y: L.dadi.y, glint: 0 },
+      ghost2: { kind: 'chudail', x: -280, y: 1200, scale: 1, alpha: 0, rot: 0, wig: true, pose: 'float', expr: 'evil', look: [1, 0.2], tremble: 0, feet: false, eyesOnly: false },
       props: { plates: false, bucket: false },
       lamp: true, dawn: 0, beam: 0, beamTo: [400, 900], letter: null,
       photo: 0,
@@ -57,6 +58,7 @@
       case 'cam': lerpKeys(s.cam, ['x', 'y', 'zoom']); break;
       case 'ghost': lerpKeys(s.ghost, ['x', 'y', 'scale', 'alpha', 'tremble', 'rot']); setKeys(s.ghost, ['pose', 'expr', 'look', 'feet', 'eyesOnly', 'wig']);
         if (act.wobble && p > 0 && p < 1) s.ghost.x += Math.sin(p * Math.PI * act.wobble) * 40; break;
+      case 'ghost2': lerpKeys(s.ghost2, ['x', 'y', 'scale', 'alpha', 'tremble', 'rot']); setKeys(s.ghost2, ['pose', 'expr', 'look', 'eyesOnly', 'wig']); break;
       case 'dadi': lerpKeys(s.dadi, ['x', 'y', 'glint']); setKeys(s.dadi, ['pose', 'expr', 'prop', 'look', 'facepack']); break;
       case 'props': setKeys(s.props, ['plates', 'bucket']); break;
       case 'dark': s.dark = lerp(s.dark, act.v, e); break;
@@ -238,16 +240,18 @@
 
   function drawGhost(ctx, g, t, mouth) {
     if (g.alpha <= 0.01) return;
+    const CH = g.kind === 'chudail';
+    const PAL = CH ? { ghost: '#efe0ff', edge: '#b98cf2', ink: '#3b2455', aura: '200,150,255' } : { ghost: C.ghost, edge: C.ghostEdge, ink: C.ghostInk, aura: '140,230,255' };
     ctx.save();
     const bob = Math.sin(t * 2.2) * 10, tr = g.tremble ? Math.sin(t * 70) * 6 * g.tremble : 0;
     ctx.translate(g.x + tr, g.y + bob); ctx.rotate(g.rot || 0); ctx.scale(g.scale, g.scale);
     if (g.eyesOnly) { ghostEyes(ctx, g, t, true); ctx.restore(); return; }
     ctx.globalAlpha = g.alpha * (0.88 + 0.08 * Math.sin(t * 5));
     // aura
-    const a = ctx.createRadialGradient(0, 20, 30, 0, 20, 230); a.addColorStop(0, 'rgba(140,230,255,0.35)'); a.addColorStop(1, 'rgba(140,230,255,0)');
+    const a = ctx.createRadialGradient(0, 20, 30, 0, 20, 230); a.addColorStop(0, `rgba(${PAL.aura},0.35)`); a.addColorStop(1, `rgba(${PAL.aura},0)`);
     ctx.fillStyle = a; ctx.fillRect(-240, -220, 480, 480);
     // sheet body with wavy tail (or legs with backward feet)
-    ctx.fillStyle = C.ghost; ctx.strokeStyle = C.ghostEdge; ctx.lineWidth = 6;
+    ctx.fillStyle = PAL.ghost; ctx.strokeStyle = PAL.edge; ctx.lineWidth = 6;
     ctx.beginPath(); ctx.moveTo(-70, -40); ctx.bezierCurveTo(-75, -150, 75, -150, 70, -40);
     if (g.feet) { ctx.quadraticCurveTo(80, 80, 60, 140); ctx.lineTo(-60, 140); ctx.quadraticCurveTo(-80, 80, -70, -40); }
     else { ctx.quadraticCurveTo(90, 80, 70, 150); for (let i = 0; i <= 6; i++) { const x = 70 - i * (140 / 6), y = 150 + (i % 2 ? -22 : 8) + Math.sin(t * 6 + i) * 8; ctx.lineTo(x, y); } ctx.quadraticCurveTo(-90, 80, -70, -40); }
@@ -261,7 +265,7 @@
       for (const side of [-1, 1]) { ctx.save(); ctx.translate(side * 32, 150 + (side > 0 ? step : -step) * 0.4); ell(ctx, -18, 0, 34, 14); ctx.fill(); ctx.stroke(); for (let k = 0; k < 4; k++) { ell(ctx, -46 - k * 2, -8 + k * 6, 6, 5); ctx.fill(); } ctx.restore(); }
     }
     // arms
-    ctx.strokeStyle = C.ghost; ctx.lineWidth = 26; ctx.lineCap = 'round';
+    ctx.strokeStyle = PAL.ghost; ctx.lineWidth = 26; ctx.lineCap = 'round';
     const up = g.pose === 'scare' ? 1 : g.pose === 'scared' ? 0.6 : 0;
     for (const side of [-1, 1]) { ctx.beginPath(); ctx.moveTo(side * 62, -20); ctx.quadraticCurveTo(side * (110 + up * 10), lerp(30, -90, up), side * (100 + up * 20), lerp(70, -150, up)); ctx.stroke(); }
     ctx.strokeStyle = C.ghostEdge; ctx.lineWidth = 4; for (const side of [-1, 1]) { ctx.beginPath(); ctx.arc(side * (100 + up * 20), lerp(70, -150, up), 13, 0, Math.PI * 2); ctx.stroke(); }
@@ -275,14 +279,19 @@
     }
     if (g.pose === 'chai') { ctx.fillStyle = 'rgba(230,240,245,0.8)'; ctx.beginPath(); ctx.moveTo(-20, 50); ctx.lineTo(20, 50); ctx.lineTo(15, 96); ctx.lineTo(-15, 96); ctx.closePath(); ctx.fill(); ctx.fillStyle = '#b6763d'; ctx.fillRect(-16, 62, 32, 32); }
     // topknot (choti)
+    if (!CH) {
     ctx.strokeStyle = C.ghostInk; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(0, -112); ctx.quadraticCurveTo(14 + Math.sin(t * 4) * 6, -150, 30, -140); ctx.stroke();
+    }
     ghostEyes(ctx, g, t, false);
     if (g.wig) { ctx.fillStyle = '#0b0b10'; ctx.beginPath(); ctx.moveTo(-80, -60); ctx.bezierCurveTo(-90, -160, 90, -160, 80, -60); for (let i = 0; i <= 8; i++) { const x = 80 - i * 20, y = 150 + Math.sin(t * 3 + i) * 10 + (i % 2) * 20; ctx.lineTo(x * 1.15, y); } ctx.closePath(); ctx.save(); ctx.globalAlpha *= 0.92; ctx.fill(); ctx.restore(); ctx.save(); ctx.globalCompositeOperation = 'destination-over'; ctx.restore();
-      ctx.fillStyle = C.ghost; ell(ctx, 0, -60, 58, 70); ctx.fill(); ghostEyes(ctx, g, t, false); }
+      ctx.fillStyle = PAL.ghost; ell(ctx, 0, -60, 58, 70); ctx.fill(); ghostEyes(ctx, g, t, false); }
+    if (CH) { ctx.fillStyle = '#c0182c'; ell(ctx, 0, -112, 6, 6); ctx.fill(); ctx.strokeStyle = '#e0b552'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(14, -44, 7, 0, Math.PI * 2); ctx.stroke(); }
     // big handlebar moustache
+    if (!CH) {
     ctx.fillStyle = '#4f6f7c'; ctx.beginPath();
     ctx.moveTo(0, -35); ctx.bezierCurveTo(-30, -48, -60, -40, -70, -58); ctx.bezierCurveTo(-72, -30, -40, -22, 0, -28);
     ctx.bezierCurveTo(40, -22, 72, -30, 70, -58); ctx.bezierCurveTo(60, -40, 30, -48, 0, -35); ctx.fill();
+    }
     // mouth
     ctx.save(); ctx.translate(0, -12);
     const open = Math.max(mouth, g.pose === 'scare' ? 0.6 : 0, g.pose === 'scared' ? 0.8 : 0);
@@ -374,6 +383,7 @@
     drawDadi(ctx, s.dadi, t, speaking('DADI'));
     drawFog(ctx, t, s.fog * 0.6);
     drawGhost(ctx, s.ghost, t, speaking('CHAMAN'));
+    drawGhost(ctx, s.ghost2, t, speaking('CHANDNI'));
     drawFog(ctx, t + 40, s.fog * 0.5);
     // lantern glow (warm)
     const l = L.lamp, fl = flicker(t);
@@ -389,7 +399,7 @@
       ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.translate(hx, hy); ctx.rotate(a);
       const bg = ctx.createLinearGradient(0, 0, len, 0); bg.addColorStop(0, `rgba(255,255,235,${0.7 * s.beam})`); bg.addColorStop(1, 'rgba(255,255,235,0)');
       ctx.fillStyle = bg; ctx.beginPath(); ctx.moveTo(0, -8); ctx.lineTo(len, -180); ctx.lineTo(len, 180); ctx.lineTo(0, 8); ctx.closePath(); ctx.fill(); ctx.restore();
-      if (s.dark > 0.3) { ctx.save(); ctx.globalAlpha = s.beam; drawGhost(ctx, Object.assign({}, s.ghost, { eyesOnly: false }), t, speaking('CHAMAN')); ctx.restore(); }
+      if (s.dark > 0.3) { ctx.save(); ctx.globalAlpha = s.beam; drawGhost(ctx, Object.assign({}, s.ghost, { eyesOnly: false }), t, speaking('CHAMAN')); drawGhost(ctx, Object.assign({}, s.ghost2, { eyesOnly: false }), t, speaking('CHANDNI')); ctx.restore(); }
     }
     ctx.restore();
     // vignette
@@ -406,10 +416,12 @@
       const toS = wy => (wy - cy) * z + SH / 2;
       const heads = [toS(s.dadi.y - 105)];
       if (s.ghost.alpha > 0.1) heads.push(toS(s.ghost.y - 80 * s.ghost.scale));
+      if (s.ghost2.alpha > 0.1) heads.push(toS(s.ghost2.y - 80 * s.ghost2.scale));
       const cands = land ? [[SH - 120, 80], [130, 0]] : [[1120, 60], [1400, 20], [760, 0], [600, -10], [1480, -40]];
       let y = cands[0][0], best = -1e9;
       for (const [c, bias] of cands) { const d = Math.min(...heads.map(h => Math.abs(c - h))) + bias; if (d > best) { best = d; y = c; } }
       if (s.photo > 0.5) y = land ? SH - 120 : 1310;
+      if (land && tl.hook && t < tl.hook.dur + 0.2) y = SH - 120;
       if (s.letter && s.letter.v > 0.5) y = SH - (land ? 70 : 250);
       drawCaption(ctx, cap, t, y);
     }

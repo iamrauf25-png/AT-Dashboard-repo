@@ -21,15 +21,21 @@ where Indian Shorts audiences suggest the next scare.
 3. Profile picture: `channel-art/profile.png`. Banner: `channel-art/banner.png`.
 4. **Customization → Basic info → Description**:
    ```
-   पीपल वाले पेड़ पर 200 साल से रहता है चमन भूत। हर रात वो दादी को डराने आता है… और हर रात दादी उसे बर्तन धुलवा देती हैं। 😂👻
-   Hindi horror comedy cartoon Shorts. नए Shorts हर हफ़्ते।
+   पीपल वाले पेड़ पर 200 साल से रहता है चमन भूत। हर रात वो दादी को डराने आता है… और ज़्यादातर रातें बर्तन धोकर ख़त्म होती हैं। 😂👻
+   Hindi horror-comedy animated series for teens and grown-ups. नए Shorts रोज़ शाम 7:30 बजे, नया Episode हर रविवार।
+
+   How we make it: every episode is an original story written by us. The characters are animated with our own code-based 2D pipeline, scripts are written with help from AI tools, and the character voices are synthetic (text-to-speech). Dadi, Chaman Bhoot and Chandni Chudail are original characters.
    ```
+   *(Why: YouTube's YPP reviewers read the channel description, and its policy test is whether they can "clearly tell that you made the content". Being upfront about the process helps. See `reports/Monetizing Dadi vs Bhoot fast.md`.)*
 5. **Settings → Channel → Advanced → Audience**: **"No, set this channel as not made for kids."**
    The jump scares are aimed at teens and adults. Each video also gets "No" (below).
 6. **Settings → Channel → Basic info → Country**: India. **Upload defaults**: Category **Comedy**,
    Video language **Hindi**, Title & description language **Hindi**.
 
-## Part 2: schedule (two weeks)
+## Part 2: schedule
+
+> **Superseded:** the day-by-day schedule now lives in **`CALENDAR.md`** (starting Wed 25 Nov). The
+> table below is the original first draft, kept for reference only.
 
 Indian Shorts traffic usually peaks in the evening. Start with **7:30 pm IST** and adjust after two
 weeks using Studio → Analytics → Audience → "When your viewers are on YouTube". (That's a common
@@ -54,7 +60,7 @@ loudness about -14 LUFS.
 
 Same for all five:
 - **Audience**: No, not made for kids
-- **Altered or synthetic content**: Yes. The voices are synthetic (Kokoro TTS).
+- **Altered or synthetic content**: No. YouTube says clearly unrealistic content such as animation doesn't need the label, and that the label never affects reach or earnings, so choose Yes if you'd rather be safe. The channel description already discloses the AI voices.
 - **Tags**: `dadi vs bhoot, दादी vs भूत, bhoot cartoon, horror comedy, hindi cartoon, bhoot wala cartoon, chudail, funny bhoot, hindi kahaniya, animated shorts`
 
 ### 1 · भूत से 200 साल का किराया माँगा
@@ -109,12 +115,13 @@ Pin this comment yourself: `अगली बार भूत दादी को
 | File | Length | Thumbnail | Subtitles |
 | --- | --- | --- | --- |
 | `long/e01-bhoot-ka-license.mp4` | 2:54 | `channel-art/thumb_e01.png` | `long/e01-bhoot-ka-license.hi.srt`, `.en.srt` |
-| `long/compilation-01.mp4` | 4:21 | `channel-art/thumb_comp.png` | — (Hindi captions are burned in) |
+| `long/e02-chaman-ka-rishta.mp4` | 3:33 | `channel-art/thumb_e02.png` | `long/e02-chaman-ka-rishta.hi.srt`, `.en.srt` |
+| `long/compilation-01.mp4` (**on hold**, see CALENDAR.md) | 4:21 | `channel-art/thumb_comp.png` | — (Hindi captions are burned in) |
 
 **When:** post Episode 1 on a weekend (for example **Saturday 7:30 pm IST**) once 3–4 Shorts are already up.
 The Shorts bring in viewers, and the episode gives them something longer to watch. Post the compilation a week later.
 
-**Upload settings (both):** Not made for kids · Altered/synthetic content: Yes · Category Comedy ·
+**Upload settings (both):** Not made for kids · Altered/synthetic content: No (see Part 3) · Category Comedy ·
 Language Hindi · upload the custom thumbnail · add an **end screen** (the last 9 seconds of the episode
 are a "फिर मिलेंगे… आज रात!" card, left clear for it): one "subscribe" element and one "best for viewer"
 video. **Subtitles** (episode only): Studio → Subtitles → Add language → Hindi → Upload file → *with timing* →
@@ -147,7 +154,33 @@ The Ghost Union has warned Chaman Bhoot: scare Dadi before sunrise, or lose his 
 ```
 **Tags**: `dadi vs bhoot, दादी vs भूत, bhoot cartoon, hindi cartoon, horror comedy cartoon, bhoot wala cartoon, chudail cartoon, funny bhoot story, hindi kahaniya, animated story hindi`
 
-## Compilation 1 · सारे किस्से
+## Episode 2 · चमन का रिश्ता (Sun 6 Dec, 11:00 am)
+
+**Title**
+```
+भूत का रिश्ता… चुड़ैल से?! 💍👻 Dadi vs Bhoot Episode 2 | Hindi Horror Comedy
+```
+**Description**
+```
+दो सौ साल से अकेला चमन भूत… और दादी ने ढूँढ लिया उसके लिए रिश्ता — कुएँ वाली चाँदनी चुड़ैल! 💍 पर रिश्ते के इंटरव्यू में सवाल बहुत टेढ़े हैं, और डराने का मुक़ाबला दादी के सामने है। 😂
+
+Lonely 200-year-old Chaman Bhoot gets an arranged-match "interview" with Chandni, the chudail from the village well. Dadi asks the questions.
+
+0:00 अकेला भूत
+0:27 रिश्ते की बात
+0:51 कुएँ वाली चुड़ैल
+1:22 इंटरव्यू
+2:02 चमन का शो-ऑफ़
+2:41 रिश्ता पक्का?
+
+अगले एपिसोड में: भूत की शादी! Shaadi में डरेगा कौन? Comment करो 👇
+
+#DadiVsBhoot #bhoot #chudail #horrorcomedy #hindicartoon
+```
+**Tags**: `dadi vs bhoot, दादी vs भूत, chudail cartoon, bhoot cartoon, hindi horror comedy, bhoot ki shaadi, hindi cartoon story, animated series hindi`
+Upload `thumb_e02.png` as the thumbnail and both subtitle files. End screen: subscribe + Episode 1.
+
+## Compilation 1 · सारे किस्से (on hold)
 
 **Title**
 ```

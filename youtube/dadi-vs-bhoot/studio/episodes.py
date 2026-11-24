@@ -151,3 +151,150 @@ EPISODES = {
         ],
     },
 }
+
+
+# ---------------------------------------------------------------------------
+# Episode 2 — a different arc from Episode 1: an arranged-match comedy, not "Dadi beats the scare".
+WELL = dict(a="cam", x=-200, y=1080, zoom=1.3)
+THREE = dict(a="cam", x=300, y=1060, zoom=0.95)
+CD = dict(a="cam", x=560, y=1090, zoom=1.2)
+
+
+def cam(c, **kw): return {**c, **kw}
+
+
+def L(who, text, en, **kw):
+    d = {"say": who, "text": text, "en": en}; d.update(kw); return d
+
+
+EPISODES["e02-chaman-ka-rishta"] = {
+    "title": "चमन का रिश्ता",
+    "aspect": "16:9",
+    "hook": {"text": "दादी vs भूत", "sub": "एपिसोड 2 · चमन का रिश्ता", "dur": 4.2},
+    "initial": {"cam": {"x": 360, "y": 700, "zoom": 1.35}, "dark": 0.1,
+                "ghost": {"alpha": 1, "x": 340, "y": 640, "expr": "sad", "look": [0.3, 0.5]}},
+    "events": [
+        # ---------------- अकेला भूत ----------------
+        L("NARRATOR_HI", "पीपल के पेड़ पर दो सौ साल से एक भूत रहता है। डराने में फ़ेल… और अकेला।",
+          "A ghost has lived in the peepal tree for two hundred years. A failure at scaring… and alone.",
+          chapter="अकेला भूत", sfx=[["owl", 0.8]]),
+        L("CHAMAN", "ऊऊऊ… कोई तो डरो… कोई तो आओ…", "Oooh… somebody be scared… somebody come…",
+          tts="ऊऊऊ… कोई तो डरो… कोई तो आओ…", act=[{"a": "cam", "x": 560, "y": 1000, "zoom": 1.0}, {"a": "dark", "v": 0, "dur": 1.0}]),
+        {"dur": 1.2, "act": [{"a": "ghost", "x": 400, "y": 990, "ease": "inout"}, cam(CD)]},
+        L("DADI", "फिर रो रहा है? आज क्या हुआ?", "Crying again? What happened today?", act=[{"a": "dadi", "look": [-1, -0.3], "expr": "flat", "dur": 0}]),
+        L("CHAMAN", "दादी, आज पीपल पर दो उल्लू आए। दोनों जोड़े में। और मैं… अकेला।",
+          "Dadi, two owls came to the peepal today. A couple. And me… all alone.", sfx=[["owl", 0.5]]),
+        L("DADI", "दो सौ साल का हो गया। शादी की उम्र तो कब की निकल गई।", "You're two hundred. The marrying age passed long ago."),
+        L("CHAMAN", "भूतों की शादी की कोई उम्र नहीं होती!", "Ghosts don't have a marrying age!", act=[{"a": "ghost", "expr": "neutral", "dur": 0}]),
+        L("DADI", "हम्म… तो फिर रिश्ता ढूँढना पड़ेगा।", "Hmm… then we'll have to find you a match.",
+          act=[{"a": "music", "mode": "comic", "dur": 0}, {"a": "dadi", "expr": "smug", "dur": 0}], gap=0.6),
+
+        # ---------------- रिश्ते की बात ----------------
+        L("CHAMAN", "पर दादी, मुझसे शादी कौन करेगा? मैं तो किसी को डरा भी नहीं पाता।",
+          "But Dadi, who will marry me? I can't even scare anyone.", chapter="रिश्ते की बात", act=[{"a": "ghost", "expr": "sad", "dur": 0}]),
+        L("DADI", "शादी में डराना नहीं पड़ता, निभाना पड़ता है।", "Marriage isn't about scaring. It's about sticking together.",
+          act=[{"a": "dadi", "expr": "neutral", "dur": 0}]),
+        L("DADI", "और रिश्ता मेरे पास है। कुएँ वाली चाँदनी।", "And I have just the match. Chandni, from the well.", act=[{"a": "dadi", "expr": "smug", "dur": 0}]),
+        L("CHAMAN_SCARED", "कुएँ वाली चुड़ैल?! वो तो बहुत डरावनी है!", "The chudail from the well?! She's terrifying!",
+          act=[{"a": "ghost", "expr": "scared", "tremble": 0.7, "dur": 0}]),
+        L("DADI", "हाँ। तेरे लिए बिल्कुल सही।", "Yes. Perfect for you."),
+        L("CHAMAN", "…सच में?", "…Really?", tts="सच में?", act=[{"a": "ghost", "tremble": 0, "expr": "neutral", "dur": 0}]),
+        L("DADI", "चल, तैयार हो जा। बाल तो हैं नहीं, चोटी ही सँवार ले।", "Go, get ready. You've no hair, so at least fix your choti."),
+        {"dur": 1.6, "sfx": [["boing", 0.1]], "act": [{"a": "music", "mode": "horror", "off": 1.4, "dur": 0}]},
+
+        # ---------------- कुएँ वाली चुड़ैल ----------------
+        {"dur": 2.4, "chapter": "कुएँ वाली चुड़ैल", "sfx": [["gust", 0.0, 2.4]],
+         "act": [cam(WELL), {"a": "fog", "v": 1.4}, {"a": "dark", "v": 0.25},
+                 {"a": "ghost2", "alpha": 1, "eyesOnly": True, "x": -280, "y": 1180, "dur": 0}]},
+        L("NARRATOR_HI", "गाँव के पुराने कुएँ में रहती है चाँदनी चुड़ैल। कहते हैं, जो भी उसमें झाँकता है… वापस नहीं आता।",
+          "In the village's old well lives Chandni Chudail. They say whoever peeks into it… never comes back.", sfx=[["riser", 4.0, 2.0]]),
+        {"dur": 0.6, "act": [cam(THREE)]},
+        L("DADI", "चाँदनी! ओ चाँदनी! बाहर आ, लड़के वाले आए हैं!", "Chandni! Oh, Chandni! Come out, the groom's family is here!",
+          act=[{"a": "dadi", "look": [-1, -0.2], "dur": 0}]),
+        {"dur": 1.8, "sfx": [["riser", 0.0, 1.6]], "act": [{"a": "ghost2", "y": 1120, "ease": "linear"}]},
+        {"dur": 0.5, "sfx": [["sting", 0.3]],
+         "act": [{"a": "ghost2", "eyesOnly": False, "y": 960, "scale": 1.35, "pose": "scare", "expr": "evil", "ease": "in", "dur": 0.4},
+                 {"a": "flash", "off": 0.35, "dur": 0.3}, {"a": "shake", "v": 18, "off": 0.35, "dur": 0.5}, {"a": "dark", "v": 0, "dur": 0.4},
+                 {"a": "ghost", "expr": "scared", "tremble": 1, "pose": "scared", "dur": 0, "off": 0.4}]},
+        L("CHANDNI", "कौन है जो आधी रात को चाँदनी को बुलाता है?", "Who dares call Chandni at midnight?"),
+        L("CHAMAN_SCARED", "द-द-दादी… मुझे घर जाना है।", "D-d-Dadi… I want to go home.", tts="द… द… दादी… मुझे घर जाना है।"),
+        L("DADI", "तेरा घर ये पेड़ है, यहीं तो है। चुपचाप बैठ।", "Your home is this tree, it's right here. Sit quietly.",
+          act=[{"a": "music", "mode": "comic", "dur": 0}, {"a": "dadi", "expr": "flat", "dur": 0}]),
+        L("CHANDNI", "ओह… दादी, आप हैं? नमस्ते, नमस्ते।", "Oh… Dadi, it's you? Namaste, namaste.",
+          act=[{"a": "ghost2", "pose": "float", "expr": "neutral", "scale": 1.0, "dur": 0.4}]),
+        {"dur": 1.6, "sfx": [["whoosh", 0.0]],
+         "act": [{"a": "ghost2", "x": 60, "y": 1000, "look": [1, 0.2]}, {"a": "ghost", "tremble": 0, "pose": "float", "expr": "neutral", "dur": 0.3}]},
+
+        # ---------------- इंटरव्यू ----------------
+        L("DADI", "बैठो बेटा। तो… ये है हमारा चमन। दो सौ साल का, और पेड़ अपना है।",
+          "Sit, dear. So… this is our Chaman. Two hundred years old, and he has his own tree.", chapter="इंटरव्यू",
+          act=[{"a": "dadi", "expr": "smug", "dur": 0}]),
+        L("CHANDNI", "पेड़ किराये का है या अपना?", "Is the tree rented or owned?"),
+        L("DADI", "किराया तो इसने आज तक दिया ही नहीं। तो अपना ही समझो।", "He's never paid a rupee of rent. So consider it his own."),
+        L("CHANDNI", "हम्म। और काम क्या करते हैं?", "Hmm. And what does he do for a living?"),
+        L("CHAMAN", "मैं… लोगों को डराता हूँ।", "I… scare people.", act=[{"a": "ghost", "look": [-1, 0.1], "dur": 0}]),
+        L("CHANDNI", "अच्छा? अब तक कितनों को डराया?", "Really? How many have you scared so far?"),
+        {"dur": 1.4, "sfx": [["owl", 0.2]]},
+        L("CHAMAN", "…ज़ीरो।", "…Zero.", tts="ज़ीरो।", act=[{"a": "overlay", "text": "0", "color": "#ff5a4f", "dur": 1.6}, {"a": "ghost", "expr": "sad", "dur": 0}]),
+        L("CHANDNI", "ज़ीरो?! दो सौ साल में ज़ीरो?", "Zero?! Zero in two hundred years?"),
+        L("DADI", "पर बर्तन बहुत अच्छे धोता है।", "But he washes dishes really well."),
+        L("CHANDNI", "…ये तो बड़ी बात है। मेरे कुएँ में तीन सौ साल के बर्तन पड़े हैं।",
+          "…Now that's impressive. There are three hundred years of dishes in my well.", tts="ये तो बड़ी बात है। मेरे कुएँ में तीन सौ साल के बर्तन पड़े हैं।"),
+        {"dur": 1.0, "sfx": [["boing", 0.0]]},
+        L("DADI", "अब तुम बताओ, चाँदनी। खाना बनाना आता है?", "Now your turn, Chandni. Can you cook?"),
+        L("CHANDNI", "डराना आता है।", "I can scare."),
+        L("DADI", "वो तो इस घर में किसी को नहीं आता।", "Well, nobody in this house can do that."),
+        L("CHAMAN", "दादी!", "Dadi!", gap=0.6),
+
+        # ---------------- चमन का शो-ऑफ़ ----------------
+        L("CHAMAN", "चाँदनी जी, मैं दिखाता हूँ मैं कितना डरावना हूँ! दादी, तैयार हो जाओ!",
+          "Chandni ji, let me show you how scary I am! Dadi, get ready!", chapter="चमन का शो-ऑफ़",
+          act=[{"a": "music", "mode": "horror", "dur": 0}, cam(CD)]),
+        {"dur": 1.4, "sfx": [["chains", 0.2], ["riser", 0.0, 1.4]], "act": [{"a": "ghost", "pose": "chains", "expr": "evil", "scale": 1.25, "y": 960}]},
+        L("CHAMAN", "हा हा हा! मैं हूँ चमन भूत! डरो!", "Ha ha ha! I am Chaman Bhoot! Be afraid!",
+          sfx=[["sting", 0.0]], act=[{"a": "ghost", "pose": "scare", "dur": 0}, {"a": "flash", "dur": 0.3}, {"a": "shake", "v": 16, "dur": 0.4}]),
+        L("DADI", "चाय ठंडी हो रही है। जल्दी डरा।", "My tea's getting cold. Scare me quickly.", act=[{"a": "music", "mode": "comic", "dur": 0}]),
+        L("CHANDNI", "हा हा हा हा!", "Ha ha ha ha!", tts="हा हा हा हा हा!", act=[cam(THREE)]),
+        L("CHAMAN", "आप… हँस रही हैं?", "You're… laughing?", tts="आप हँस रही हैं?", act=[{"a": "ghost", "pose": "float", "scale": 1.0, "y": 990, "expr": "sad", "dur": 0.3}]),
+        L("CHANDNI", "रुको। मैं दिखाती हूँ, डराना किसे कहते हैं।", "Wait. Let me show you what real scaring looks like.",
+          act=[{"a": "music", "mode": "horror", "dur": 0}]),
+        {"dur": 1.6, "sfx": [["blow", 0.2], ["riser", 0.3, 1.3]],
+         "act": [{"a": "lamp", "on": False, "off": 0.5, "dur": 0}, {"a": "dark", "v": 0.78, "off": 0.5, "dur": 0.4},
+                 {"a": "ghost2", "x": 470, "y": 960, "scale": 1.45, "pose": "scare", "expr": "evil"}, {"a": "ghost", "x": 180, "y": 1000, "dur": 0.8}]},
+        L("CHANDNI", "दादी… मैं तुम्हें… कुएँ में ले जाऊँगी…", "Dadi… I'll take you… into the well…", tts="दादी… मैं तुम्हें… कुएँ में… ले जाऊँगी…"),
+        {"dur": 0.8, "sfx": [["click", 0.2]],
+         "act": [{"a": "dadi", "prop": "phone", "dur": 0}, {"a": "beam", "v": 1, "to": [470, 880], "off": 0.25, "dur": 0.15},
+                 {"a": "ghost2", "pose": "scared", "expr": "scared", "tremble": 1, "off": 0.3, "dur": 0}]},
+        L("DADI", "कुएँ में? पहले उसकी सफ़ाई तो कर ले। तीन सौ साल के बर्तन पड़े हैं वहाँ।",
+          "Into the well? Clean it first. Three hundred years of dishes are lying in there.",
+          act=[{"a": "music", "mode": "comic", "dur": 0}]),
+        {"dur": 1.0, "act": [{"a": "lamp", "on": True, "dur": 0}, {"a": "dark", "v": 0, "dur": 0.4}, {"a": "beam", "v": 0, "dur": 0.3},
+                             {"a": "dadi", "prop": "chai", "dur": 0}, {"a": "ghost2", "x": 120, "y": 1000, "scale": 1.0, "pose": "float", "tremble": 0, "expr": "neutral"}]},
+        L("CHANDNI", "दादी… आप सच में किसी से नहीं डरतीं?", "Dadi… are you really not afraid of anything?"),
+        L("DADI", "डरती हूँ ना। बिजली के बिल से।", "Of course I am. Of the electricity bill.", act=[{"a": "dadi", "expr": "smug", "dur": 0}]),
+        L("CHAMAN", "हा हा हा!", "Ha ha ha!", tts="हा हा हा हा!", act=[{"a": "ghost", "expr": "neutral", "pose": "scare", "dur": 0}]),
+        L("CHANDNI", "हा हा हा!", "Ha ha ha!", tts="हा हा हा हा!", gap=0.8),
+
+        # ---------------- रिश्ता पक्का? ----------------
+        L("CHANDNI", "चमन जी… आप डरावने तो बिल्कुल नहीं हो।", "Chaman ji… you're not scary at all.", chapter="रिश्ता पक्का?",
+          act=[{"a": "music", "mode": "tender", "dur": 0}, {"a": "ghost", "pose": "float", "dur": 0}, {"a": "ghost2", "x": 200, "dur": 1.0}]),
+        L("CHAMAN", "पता है।", "I know.", act=[{"a": "ghost", "expr": "sad", "dur": 0}]),
+        L("CHANDNI", "पर सच्चे हो। दो सौ साल में किसी ने मुझसे इतनी सच्ची बात नहीं की।",
+          "But you're honest. In two hundred years, no one has been this honest with me."),
+        L("CHAMAN", "तो… रिश्ता पक्का?", "So… is it a match?", tts="तो… रिश्ता पक्का?", act=[{"a": "ghost", "expr": "neutral", "dur": 0}]),
+        L("CHANDNI", "पक्का। पर एक शर्त है।", "It's a match. But on one condition."),
+        L("CHANDNI", "शादी के बाद हम पेड़ पर रहेंगे, कुएँ में नहीं। वहाँ सीलन बहुत है।",
+          "After the wedding we live in the tree, not the well. It's far too damp down there."),
+        L("DADI", "और मेरी भी एक शर्त है।", "And I have a condition too."),
+        L("CHAMAN", "क्या, दादी?", "What is it, Dadi?"),
+        L("DADI", "बर्तन अब तुम दोनों मिलकर धोओगे।", "From now on, you'll both wash the dishes together.", act=[{"a": "dadi", "expr": "smug", "dur": 0}]),
+        L("CHANDNI", "दादी… सच बताऊँ? असली चुड़ैल तो आप हो।", "Dadi… shall I be honest? You're the real chudail here."),
+        L("DADI", "तारीफ़ के लिए शुक्रिया, बहू।", "Thank you for the compliment, bahu.", sfx=[["chime", 1.6]], gap=0.8),
+        {"dur": 2.6, "act": [{"a": "ghost", "x": 300, "y": 960}, {"a": "ghost2", "x": 160, "y": 960}, {"a": "cam", "x": 400, "y": 980, "zoom": 0.95}]},
+        L("NARRATOR_HI", "और इस तरह, दो सौ साल बाद… पीपल वाले भूत का घर बस गया।",
+          "And so, after two hundred years… the peepal ghost finally found a family."),
+        L("NARRATOR_HI", "पर एक सवाल अब भी बाक़ी है… शादी में डरेगा कौन?", "But one question still remains… who's going to be scared at the wedding?",
+          sfx=[["sting", 4.2]], act=[{"a": "music", "mode": "horror", "dur": 0, "off": 4.0}]),
+        {"dur": 9.0, "act": [{"a": "overlay", "text": "अगला एपिसोड: भूत की शादी!", "color": "#ffd27a", "dur": 9.0}]},
+    ],
+}

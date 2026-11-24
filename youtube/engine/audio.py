@@ -24,6 +24,7 @@ VOICES = {
     "DADI": ("hf_beta", "hi", 0.92, 0.90, 1.05, "treble=g=2"),
     "CHAMAN": ("hm_omega", "hi", 0.95, 0.86, 1.0, "aecho=0.8:0.6:70|140:0.35|0.2"),
     "CHAMAN_SCARED": ("hm_omega", "hi", 1.15, 1.12, 1.0, "aecho=0.8:0.6:60:0.3"),
+    "CHANDNI": ("hf_alpha", "hi", 0.95, 0.92, 1.0, "aecho=0.8:0.6:60|120:0.3|0.18"),
     "NARRATOR_HI": ("hm_psi", "hi", 0.9, 0.90, 0.95, "aecho=0.8:0.5:90:0.25"),
 }
 
