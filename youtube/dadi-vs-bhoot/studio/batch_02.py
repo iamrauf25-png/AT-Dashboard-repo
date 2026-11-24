@@ -29,7 +29,7 @@ SETTLE = {"dur": 0.4, "act": [cut(TWO), {"a": "ghost", "x": 450, "y": 1000, "sca
 SHORTS = {
     "d06-wifi": {
         "title": "भूत ने माँगा Wi-Fi पासवर्ड",
-        "hook": {"text": "भूत को चाहिए… Wi-Fi?", "dur": 2.2},
+        "hook": {"text": "भूत को चाहिए Wi-Fi 📶", "dur": 2.2},
         "initial": {"cam": {"x": 560, "y": 1060, "zoom": 1.15}, "ghost": GHOST_NEAR},
         "events": [
             {"say": "CHAMAN", "text": "दादी! आपके घर का Wi-Fi पासवर्ड क्या है?", "tts": "दादी! आपके घर का वाई-फ़ाई पासवर्ड क्या है?"},
@@ -45,7 +45,7 @@ SHORTS = {
     },
     "d07-diet": {
         "title": "भूत डाइट पर है!",
-        "hook": {"text": "भूत खाता क्या है?", "dur": 2.2},
+        "hook": {"text": "भूत Diet पर है 🍵", "dur": 2.2},
         "initial": EYES_IN_TREE,
         "events": scare_in() + [
             {"say": "CHAMAN", "text": "डरो दादी! मैं भूखा भूत हूँ!", "tts": "डरो दादी! मैं भूखा भूत हूँ!"},
@@ -60,7 +60,7 @@ SHORTS = {
     },
     "d08-gaana": {
         "title": "आधी रात भूत का गाना",
-        "hook": {"text": "रात 2 बजे… कोई गा रहा है", "dur": 2.4},
+        "hook": {"text": "रात 2 बजे भूत का गाना 🎤", "dur": 2.4},
         "initial": {**EYES_IN_TREE, "ghost": {**EYES_IN_TREE["ghost"]}},
         "events": [
             {"say": "CHAMAN", "text": "ऊऊऊऊ… ऊऊऊऊऊ…", "tts": "ऊऊऊऊऊ… ऊऊऊऊऊऊ…", "sfx": [["gust", 0.0, 3.0]],
@@ -76,7 +76,7 @@ SHORTS = {
     },
     "d09-janmdin": {
         "title": "भूत का 201वाँ जन्मदिन",
-        "hook": {"text": "भूत का बर्थडे!", "dur": 2.0},
+        "hook": {"text": "भूत का 201वाँ Birthday 🎂", "dur": 2.0},
         "initial": {"cam": {"x": 560, "y": 1060, "zoom": 1.15}, "ghost": GHOST_NEAR},
         "events": [
             {"say": "CHAMAN", "text": "दादी! आज मेरा दो सौ एकवाँ जन्मदिन है!", "act": [{"a": "overlay", "text": "201", "color": "#ffd27a", "dur": 2.5}], "sfx": [["pop", 0.0]]},
@@ -91,7 +91,7 @@ SHORTS = {
     },
     "d10-chudail-moonchh": {
         "title": "चुड़ैल की मूँछें?!",
-        "hook": {"text": "आज आई… चुड़ैल!", "dur": 2.2},
+        "hook": {"text": "मूँछों वाली चुड़ैल?! 😂", "dur": 2.2},
         "initial": {**EYES_IN_TREE, "ghost": {**EYES_IN_TREE["ghost"], "wig": True}},
         "events": scare_in() + [
             {"say": "CHAMAN_SCARED", "text": "मैं… चुड़ैल हूँ… डरो!", "tts": "मैं चुड़ैल हूँ… डरो!"},
@@ -105,7 +105,7 @@ SHORTS = {
     },
     "d11-ulta-latka": {
         "title": "उल्टा लटका भूत… दादी का जवाब",
-        "hook": {"text": "ऊपर मत देखना…", "dur": 2.2},
+        "hook": {"text": "दादी, ऊपर देखो… 🙃", "dur": 2.2},
         "initial": {"cam": {"x": 560, "y": 1000, "zoom": 1.1},
                     "ghost": {"alpha": 1, "x": 470, "y": 800, "rot": 3.14159, "expr": "evil", "look": [0.6, -0.5]}},
         "events": [
@@ -120,7 +120,7 @@ SHORTS = {
     },
     "d12-exam": {
         "title": "भूत का एग्ज़ाम: इंसान को कैसे डराएँ?",
-        "hook": {"text": "भूत का एग्ज़ाम!", "dur": 2.0},
+        "hook": {"text": "इंसान किससे डरता है? 📝", "dur": 2.0},
         "initial": {"cam": {"x": 560, "y": 1060, "zoom": 1.15}, "ghost": GHOST_NEAR},
         "events": [
             {"say": "CHAMAN", "text": "दादी, मदद करो! भूत संघ का एग्ज़ाम है!", "act": [{"a": "ghost", "expr": "scared", "dur": 0}]},
@@ -135,7 +135,7 @@ SHORTS = {
     },
     "d13-teen-baje": {
         "title": "रात 3 बजे भूत सबसे ताक़तवर…",
-        "hook": {"text": "रात 3 बजे मत जागना", "dur": 2.4},
+        "hook": {"text": "रात 3 बजे भूत का राज 💪", "dur": 2.4},
         "initial": {**EYES_IN_TREE, "dark": 0.3},
         "events": [
             {"say": "NARRATOR_HI", "text": "कहते हैं… रात के तीन बजे भूत सबसे ताक़तवर होते हैं।", "sfx": [["owl", 0.5]],
@@ -152,7 +152,7 @@ SHORTS = {
     },
     "d14-machis": {
         "title": "भूत ने दीया बुझाया… फिर ख़ुद डर गया",
-        "hook": {"text": "अँधेरे में कौन डरा?", "dur": 2.2},
+        "hook": {"text": "भूत अँधेरे से डर गया 🕯️", "dur": 2.2},
         "initial": {"cam": {"x": 620, "y": 1060, "zoom": 1.2},
                     "ghost": {"alpha": 1, "x": 600, "y": 960, "expr": "evil", "look": [0.8, 0.2]}},
         "events": [

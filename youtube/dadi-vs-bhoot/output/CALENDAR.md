@@ -25,14 +25,23 @@ the label doesn't affect earnings; choose Yes if you're unsure). End every Short
 `#DadiVsBhoot #bhoot #horrorcomedy #hindicartoon #shorts`. On each Short, under **Related video**, pick
 the latest long episode. **Pin a comment**: `अगली बार भूत दादी को कैसे डराए? Comment करो 👇`
 
+## Lesson from Short #1 (d01, 24 Nov)
+78.5% swiped away; average view about 4 s of 24 s. The first 5 seconds were a dark scene with tiny eyes and a
+slow narrator, and the ghost only appeared at 5.5 s. **New rule for every Short:** frame 1 shows both
+characters, bright and big, mid-conflict, with the hook text already on screen; the first spoken word lands within 0.2 s; no
+narrator intros before the conflict. The engine now trims slow openings automatically (`trim` in
+`engine/audio.py`). Days 2–21 below still use the old cut; rebuild each one with the new rule before it's
+uploaded (one day at a time).
+
 ## Week 1 · 25 Nov – 1 Dec
 
 | Day | Date | File | Title | Description (first line) |
 | --- | --- | --- | --- | --- |
-| 1 | Wed 25 Nov | `shorts/d01-kiraya.mp4` | भूत से 200 साल का किराया माँगा 😂 \| Dadi vs Bhoot \| Horror Comedy | 200 साल से पीपल पर रहने वाला भूत दादी को डराने आया… दादी ने किराया माँग लिया। |
+| 1 | Tue 24 Nov | `shorts/d01-kiraya.mp4` | ✅ posted 24 Nov 7:30 pm: 187 views, 21.5% stayed to watch (slow dark intro; see "Lesson" below) | |
+| 1b | **Wed 25 Nov** | `shorts/d04-boo.mp4` (**v2, new hook**) | भूत ने कहा "BOO!"… दादी का जवाब सुनो 😂 \| Dadi vs Bhoot | आधी रात, दादी के पीछे भूत… "बू!" और दादी बोलीं, बू तो तुम्हारे कुर्ते से आ रही है! |
 | 2 | Thu 26 Nov | `shorts/d05-multani-mitti.mp4` | Bhoot ko kisse darr lagta hai? 👻 दादी का face pack \| Dadi vs Bhoot | चमन भूत ने ठान लिया था… आज दादी को डराकर ही रहेगा। फिर दादी ने मुड़कर देखा। 💚 |
 | 3 | Fri 27 Nov | `shorts/d06-wifi.mp4` | भूत ने माँगा Wi-Fi Password 📶 \| Dadi vs Bhoot \| Hindi Cartoon | चमन भूत को डरावनी रील्स बनानी हैं… पर पासवर्ड के लिए पहले बर्तन धोने पड़ेंगे। |
-| 4 | Sat 28 Nov | `shorts/d04-boo.mp4` | भूत ने कहा "BOO!"… दादी का जवाब 😂 \| Dadi vs Bhoot | आधी रात, दादी के पीछे भूत… "बू!" और दादी बोलीं, बू तो तुम्हारे कुर्ते से आ रही है! |
+| 4 | Sat 28 Nov | *(d04 moved to 25 Nov; slot to be filled after we see how the v2 hook performs)* | | |
 | 5 | **Sun 29 Nov, 11:00 am** | **LONG** `long/e01-bhoot-ka-license.mp4` | भूत का लाइसेंस रद्द?! 👻 Dadi vs Bhoot Episode 1 \| Hindi Horror Comedy Cartoon | *(full description, chapters, thumbnail `thumb_e01.png`, subtitles: see UPLOAD-SHEET.md)* |
 | 5 | Sun 29 Nov | `shorts/d09-janmdin.mp4` | भूत का 201वाँ Birthday 🎂 \| Dadi vs Bhoot | 201 साल का हुआ चमन भूत! दादी ने दिया सबसे अनोखा गिफ़्ट। |
 | 6 | Mon 30 Nov | `shorts/d02-ulte-pair.mp4` | भूत के पैर उल्टे क्यों होते हैं? 👣 \| Dadi vs Bhoot \| Bhoot Wala Cartoon | कहते हैं भूत के पैर उल्टे होते हैं… चमन भूत दादी को डराने चला, और चलता गया… उल्टा! |

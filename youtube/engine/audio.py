@@ -335,6 +335,28 @@ def build(sid, spec, series, outdir):
     mix = np.stack([dia + fx + mus, dia + fx + mus], axis=1) + amb
     mix[: int(0.02 * SR)] *= np.linspace(0, 1, int(0.02 * SR))[:, None]
     mix = mix[: int(total * SR)]
+
+    # Shorts hook rule (from the first Short's analytics: 78.5% swiped away during a slow, dark intro):
+    # start on the conflict. Cut lead-in silence, and if a jump-scare sting comes before any character
+    # speaks, start 0.25 s before the sting. Override with spec["trim"] (seconds) or None to disable.
+    trim = 0.0
+    if spec.get("aspect", "9:16") == "9:16" and spec.get("trim", "auto") is not None:
+        tr = spec.get("trim", "auto")
+        if tr == "auto":
+            first_line = lines[0]["start"] if lines else 0.35
+            first_char = next((l["start"] for l in lines if l["who"] != "NARRATOR"), 1e9)
+            stings = [st for st, name, _ in sorted(sfx_ev) if name == "sting" and st < first_char + 0.05]
+            trim = stings[0] - 0.25 if stings and stings[0] - 0.25 > first_line else max(0.0, first_line - 0.12)
+        else:
+            trim = float(tr)
+    if trim > 0:
+        mix = mix[int(trim * SR):]
+        mix[: int(0.015 * SR)] *= np.linspace(0, 1, int(0.015 * SR))[:, None]
+        total -= trim
+        for ac in acts: ac["start"] = round(ac["start"] - trim, 3)
+        for l in lines: l["start"] = round(l["start"] - trim, 3); l["end"] = round(l["end"] - trim, 3)
+        lines = [l for l in lines if l["end"] > 0.05]
+        for c in chapters: c["start"] = round(max(0, c["start"] - trim), 2)
     mix *= 0.89 / max(1e-6, np.abs(mix).max())
     sf.write(os.path.join(out, "audio.wav"), mix.astype(np.float32), SR)
 
@@ -344,7 +366,7 @@ def build(sid, spec, series, outdir):
     with open(os.path.join(out, "timeline.json"), "w") as f: json.dump(tl, f, ensure_ascii=False)
     write_srt(os.path.join(out, "captions.hi.srt"), lines, "text")
     if any(l.get("en") for l in lines): write_srt(os.path.join(out, "captions.en.srt"), lines, "en")
-    print(f"{sid}: {total:.1f}s, {len(lines)} lines, {len(acts)} acts")
+    print(f"{sid}: {total:.1f}s, {len(lines)} lines, {len(acts)} acts, trimmed {trim:.2f}s")
 
 
 def write_srt(path, lines, key):

@@ -10,6 +10,8 @@ their Short id. Paste good viewer comments under **From viewers**.
 - Humour for teens and adults (in-law politics, village satire, phones and bills). Never "for kids" wording, nursery music or child protagonists. Scares stay bloodless, especially in thumbnails and the first seconds.
 - Titles unique per video: Hindi hook + one Hinglish keyword + "Dadi vs Bhoot".
 
+- **Hook rule (from real analytics: d01 lost 78.5% of viewers in a slow, dark intro):** frame 1 must show the conflict: both characters visible, bright, big, hook text on screen, first word spoken within 0.2 s. No scene-setting narrator lines or dark build-ups before the first joke beat in Shorts. Aim for 10–18 s, with a punchline by second 3.
+
 ## Characters
 - Dadi (Kamla Devi), Chaman Bhoot, **Chandni Chudail** (from the old well; engaged to Chaman in Episode 2; voice CHANDNI; `ghost2` in scene.js)
 

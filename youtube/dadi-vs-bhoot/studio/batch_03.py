@@ -4,7 +4,7 @@ from batch_02 import TWO, GHOST_NEAR, EYES_IN_TREE, SETTLE, COMIC, END, cut, sca
 SHORTS = {
     "d15-bijli": {
         "title": "गाँव की बिजली गई… भूत पर इल्ज़ाम!",
-        "hook": {"text": "बिजली किसने काटी?", "dur": 2.2},
+        "hook": {"text": "बिजली किसने काटी? ⚡", "dur": 2.2},
         "initial": {"cam": {"x": 560, "y": 1060, "zoom": 1.15}, "ghost": GHOST_NEAR},
         "events": [
             {"dur": 1.0, "sfx": [["click", 0.2]], "act": [{"a": "lamp", "on": False, "off": 0.3, "dur": 0}, {"a": "dark", "v": 0.8, "off": 0.3, "dur": 0.2}]},
@@ -17,7 +17,7 @@ SHORTS = {
     },
     "d16-sardi": {
         "title": "भूत को लगी ठंड! 🥶",
-        "hook": {"text": "भूत को ठंड लगती है?", "dur": 2.2},
+        "hook": {"text": "भूत को ठंड लग गई 🥶", "dur": 2.2},
         "initial": {"cam": {"x": 560, "y": 1060, "zoom": 1.15}, "ghost": {**GHOST_NEAR, "tremble": 0.8, "expr": "sad"}},
         "events": [
             {"say": "CHAMAN_SCARED", "text": "ब्र्र्र… भूतों को ठंड नहीं लगती… ब्र्र्र…", "tts": "ब्रर्र… भूतों को ठंड नहीं लगती… ब्रर्र…", "sfx": [["gust", 0.0, 3.0]]},
@@ -29,7 +29,7 @@ SHORTS = {
     },
     "d17-daant-dard": {
         "title": "200 साल पुराना दाँत दर्द 🦷",
-        "hook": {"text": "आधी रात… कोई कराह रहा है", "dur": 2.4},
+        "hook": {"text": "भूत को दाँत दर्द 🦷", "dur": 2.4},
         "initial": {**EYES_IN_TREE},
         "events": [
             {"say": "CHAMAN", "text": "आआह… ऊऊह… आआह…", "tts": "आआह… ऊऊह… आआआह…", "sfx": [["riser", 0.5, 1.6]], "act": [{"a": "cam", "x": 540, "y": 960, "zoom": 1.0}]},
@@ -43,7 +43,7 @@ SHORTS = {
     },
     "d18-machchhar": {
         "title": "भूत vs मच्छर 🦟",
-        "hook": {"text": "भूत किससे डरता है?", "dur": 2.2},
+        "hook": {"text": "भूत vs मच्छर 🦟", "dur": 2.2},
         "initial": {"cam": {"x": 560, "y": 1060, "zoom": 1.15}, "ghost": GHOST_NEAR},
         "events": [
             {"dur": 1.4, "sfx": [["buzz", 0.0, 3.5]], "act": [{"a": "ghost", "look": [-0.5, -0.8], "expr": "scared", "dur": 0, "off": 0.6}]},
@@ -56,7 +56,7 @@ SHORTS = {
     },
     "d19-serial": {
         "title": "भूत को लगी सीरियल की लत 📺",
-        "hook": {"text": "रात 9 बजे… डराने का सही वक़्त?", "dur": 2.4},
+        "hook": {"text": "भूत vs दादी का सीरियल 📺", "dur": 2.4},
         "initial": {**EYES_IN_TREE},
         "events": scare_in() + [
             {"say": "CHAMAN", "text": "डरो दादी! मैं आ गया!"},
@@ -70,7 +70,7 @@ SHORTS = {
     },
     "d20-naukri": {
         "title": "भूत को मिली चौकीदार की नौकरी",
-        "hook": {"text": "भूत की पहली नौकरी!", "dur": 2.2},
+        "hook": {"text": "भूत को नौकरी मिली 🔦", "dur": 2.2},
         "initial": {"cam": {"x": 560, "y": 1060, "zoom": 1.15}, "ghost": GHOST_NEAR},
         "events": [
             {"say": "CHAMAN", "text": "दादी! मुझे नौकरी मिल गई!", "sfx": [["pop", 1.2]],
@@ -86,7 +86,7 @@ SHORTS = {
     },
     "d21-reel": {
         "title": "भूत की रील पर ज़ीरो views 📱",
-        "hook": {"text": "भूत बना Influencer!", "dur": 2.2},
+        "hook": {"text": "भूत की Reel: 0 Views 📱", "dur": 2.2},
         "initial": {"cam": {"x": 560, "y": 1060, "zoom": 1.15}, "ghost": GHOST_NEAR, "dadi": {"prop": "phone"}},
         "events": [
             {"say": "CHAMAN_SCARED", "text": "दादी! मेरी डरावनी रील पर ज़ीरो views!", "act": [{"a": "overlay", "text": "0 views", "color": "#ff5a4f", "dur": 2.6}], "sfx": [["pop", 0.0]]},

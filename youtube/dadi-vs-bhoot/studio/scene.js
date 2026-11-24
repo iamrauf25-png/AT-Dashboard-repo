@@ -347,8 +347,8 @@
   function drawHook(ctx, hook, t) {
     if (!hook || t > hook.dur) return;
     const { SW, land } = scr(ctx);
-    const p = clamp(t / 0.25, 0, 1), out = clamp((hook.dur - t) / 0.2, 0, 1), k = 0.6 + 0.4 * EASE.back(p);
-    const size = land ? 110 : 96;
+    const p = clamp(t / 0.25, 0, 1), out = clamp((hook.dur - t) / 0.2, 0, 1), k = 0.92 + 0.08 * EASE.back(p);  // near full size on frame 1
+    const size = land ? 110 : 104;
     ctx.save(); ctx.globalAlpha = out; ctx.translate(SW / 2 - (land ? 0 : 30), land ? 200 : 330); ctx.rotate(-0.03); ctx.scale(k, k);
     ctx.font = `800 ${size}px ${FONT}`; outlinedText(ctx, wrap(ctx, hook.text, land ? 1600 : 900), 0, 0, size, '#ff5a4f', 1.1);
     if (hook.sub) { ctx.font = `800 ${size * 0.45}px ${FONT}`; outlinedText(ctx, [hook.sub], 0, size * 0.95, size * 0.45, '#ffd27a'); }
