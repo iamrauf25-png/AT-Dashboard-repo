@@ -5,3 +5,5 @@ data/
 output/
 .env
 google-credentials.json
+run-job-agent.cmd
+run-job-agent.sh

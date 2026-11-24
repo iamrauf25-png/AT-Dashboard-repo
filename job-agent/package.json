@@ -6,6 +6,7 @@
   "description": "Job hunting agent: sources jobs, filters, scores them against your CV with Claude, drafts tailored application material, and tracks your pipeline.",
   "scripts": {
     "job": "tsx src/cli.ts",
+    "setup": "tsx src/setup.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

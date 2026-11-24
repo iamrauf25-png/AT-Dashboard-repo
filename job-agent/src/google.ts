@@ -24,13 +24,14 @@ function oauthClient(redirectUri?: string): OAuth2Client {
 }
 
 /** Opens a one-time browser sign-in and stores a refresh token in data/google-token.json. */
-export async function googleLogin(): Promise<void> {
+export async function googleLogin(openUrl?: (url: string) => void): Promise<void> {
   const server = http.createServer();
   await new Promise<void>((r) => server.listen(0, "127.0.0.1", r));
   const port = (server.address() as { port: number }).port;
   const client = oauthClient(`http://127.0.0.1:${port}`);
   const url = client.generateAuthUrl({ access_type: "offline", prompt: "consent", scope: SCOPES });
   console.log(`Open this link in your browser and allow access:\n\n${url}\n`);
+  openUrl?.(url);
   const code = await new Promise<string>((resolve, reject) => {
     server.on("request", (req, res) => {
       const u = new URL(req.url ?? "/", `http://127.0.0.1:${port}`);
