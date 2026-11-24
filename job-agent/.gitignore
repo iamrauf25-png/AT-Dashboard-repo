@@ -1,0 +1,7 @@
+node_modules/
+config.yaml
+data/
+output/
+cv.*
+!cv.example.md
+.env
