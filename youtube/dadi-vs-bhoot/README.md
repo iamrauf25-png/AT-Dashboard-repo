@@ -6,10 +6,11 @@ Hindi horror-comedy cartoon Shorts. **Start with [`output/UPLOAD-SHEET.md`](outp
 | --- | --- |
 | `output/shorts/*.mp4` | 21 finished Shorts (Hindi voices + Devanagari captions, 1080×1920) |
 | `output/channel-art/` | Profile picture, banner, long-video thumbnails |
-| `output/long/` | Episode 1 (2:54), Episode 2 (3:33), Compilation 1 (4:21, on hold), 1920×1080, with Hindi + English subtitle files |
+| `output/long/` | Episodes 1–3 (2:54, 3:33, 4:27), Compilation 1 (4:21, on hold), 1920×1080, with Hindi + English subtitle files |
 | `studio/episodes.py` | Long-form episode scripts (16:9, chapters, English subtitles) |
 | `studio/batch_NN.py` | Each week's new Shorts (loaded automatically) |
 | `studio/IDEAS.md` | Idea log the weekly batch draws from; paste viewer comments here |
+| `output/instagram/` | Instagram Reels + **INSTAGRAM.md** (today's post, captions, setup) |
 | `output/CALENDAR.md` | **The day-by-day posting plan**: file, title and description for every day |
 | `output/UPLOAD-SHEET.md` | Channel setup, schedule, copy-paste titles/descriptions/tags |
 | `studio/shorts.py` | The scripts / shot lists (edit these to make new Shorts) |

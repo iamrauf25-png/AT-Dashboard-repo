@@ -25,6 +25,8 @@ VOICES = {
     "CHAMAN": ("hm_omega", "hi", 0.95, 0.86, 1.0, "aecho=0.8:0.6:70|140:0.35|0.2"),
     "CHAMAN_SCARED": ("hm_omega", "hi", 1.15, 1.12, 1.0, "aecho=0.8:0.6:60:0.3"),
     "CHANDNI": ("hf_alpha", "hi", 0.95, 0.92, 1.0, "aecho=0.8:0.6:60|120:0.3|0.18"),
+    "AMMA": ("hf_beta", "hi", 0.88, 0.80, 1.0, "aecho=0.8:0.7:120|240:0.45|0.3"),
+    "CHOR": ("hm_psi", "hi", 1.15, 1.05, 1.0, ""),
     "NARRATOR_HI": ("hm_psi", "hi", 0.9, 0.90, 0.95, "aecho=0.8:0.5:90:0.25"),
 }
 
@@ -39,9 +41,10 @@ def kokoro():
     return _k
 
 
-def tts(who, text, cache):
+def tts(who, text, cache, pace=1.0):
     voice, lang, speed, pitch, gain, extra = VOICES[who]
-    key = f"{who}|{text}|{VOICES[who]}"
+    speed = speed * pace
+    key = f"{who}|{text}|{VOICES[who]}|{pace}"
     path = os.path.join(cache, hashlib.md5(key.encode()).hexdigest()[:16] + ".wav")
     if not os.path.exists(path):
         a, sr = kokoro().create(text, voice=voice, speed=speed, lang=lang)
@@ -284,7 +287,7 @@ def build(sid, spec, series, outdir):
         start = cur
         if ev.get("chapter"): chapters.append({"start": round(start, 2), "title": ev["chapter"]})
         if "say" in ev:
-            a = tts(ev["say"], ev.get("tts", ev["text"]), cache)
+            a = tts(ev["say"], ev.get("tts", ev["text"]), cache, spec.get("pace", 1.0))
             if ev.get("cut"):
                 a = a[: int(len(a) * ev["cut"])]; a[-int(0.03 * SR):] *= np.linspace(1, 0, int(0.03 * SR))
             d = len(a) / SR
@@ -292,7 +295,7 @@ def build(sid, spec, series, outdir):
             who = ev["say"].replace("_WHISPER", "").replace("_SCARED", "").replace("_HI", "")
             lines.append({"start": round(start, 3), "end": round(start + d, 3), "who": who, "text": ev["text"], "en": ev.get("en"),
                           "env": envelope(a, int(d * FPS) + 1)})
-            cur += d + ev.get("gap", 0.22)
+            cur += d + ev.get("gap", spec.get("gap", 0.22))
             evdur = d
         else:
             evdur = ev["dur"]; cur += evdur

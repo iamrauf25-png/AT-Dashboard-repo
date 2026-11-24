@@ -17,7 +17,7 @@
     wall: '#5a4a3a', wallDark: '#463a2e', ground: '#231e19', cot: '#6b4a2b', rope: '#b99b6b',
     ink: '#120b08', skin: '#9a6444', skinDark: '#7c4e33', saree: '#f2eee6', border: '#8e1f2a', hair: '#e8e8e8',
     ghost: '#d7f3ff', ghostEdge: '#7fd3ea', ghostInk: '#1d3b48',
-    caption: { DADI: '#ffd27a', CHAMAN: '#a8f0ff', CHANDNI: '#e3c4ff', NARRATOR: '#ffffff' },
+    caption: { DADI: '#ffd27a', CHAMAN: '#a8f0ff', CHANDNI: '#e3c4ff', AMMA: '#f2a8ff', CHOR: '#ffb38a', NARRATOR: '#ffffff' },
   };
   const FONT = '"Baloo 2"';
 
@@ -56,9 +56,9 @@
     const setKeys = (obj, keys) => { if (p > 0) for (const k of keys) if (act[k] !== undefined) obj[k] = act[k]; };
     switch (act.a) {
       case 'cam': lerpKeys(s.cam, ['x', 'y', 'zoom']); break;
-      case 'ghost': lerpKeys(s.ghost, ['x', 'y', 'scale', 'alpha', 'tremble', 'rot']); setKeys(s.ghost, ['pose', 'expr', 'look', 'feet', 'eyesOnly', 'wig']);
+      case 'ghost': lerpKeys(s.ghost, ['x', 'y', 'scale', 'alpha', 'tremble', 'rot']); setKeys(s.ghost, ['pose', 'expr', 'look', 'feet', 'eyesOnly', 'wig', 'garland']);
         if (act.wobble && p > 0 && p < 1) s.ghost.x += Math.sin(p * Math.PI * act.wobble) * 40; break;
-      case 'ghost2': lerpKeys(s.ghost2, ['x', 'y', 'scale', 'alpha', 'tremble', 'rot']); setKeys(s.ghost2, ['pose', 'expr', 'look', 'eyesOnly', 'wig']); break;
+      case 'ghost2': lerpKeys(s.ghost2, ['x', 'y', 'scale', 'alpha', 'tremble', 'rot']); setKeys(s.ghost2, ['pose', 'expr', 'look', 'eyesOnly', 'wig', 'garland']); break;
       case 'dadi': lerpKeys(s.dadi, ['x', 'y', 'glint']); setKeys(s.dadi, ['pose', 'expr', 'prop', 'look', 'facepack']); break;
       case 'props': setKeys(s.props, ['plates', 'bucket']); break;
       case 'dark': s.dark = lerp(s.dark, act.v, e); break;
@@ -292,6 +292,8 @@
     ctx.moveTo(0, -35); ctx.bezierCurveTo(-30, -48, -60, -40, -70, -58); ctx.bezierCurveTo(-72, -30, -40, -22, 0, -28);
     ctx.bezierCurveTo(40, -22, 72, -30, 70, -58); ctx.bezierCurveTo(60, -40, 30, -48, 0, -35); ctx.fill();
     }
+    // marigold garland (wedding)
+    if (g.garland) { for (let i = 0; i <= 16; i++) { const a = Math.PI * (0.05 + 0.9 * i / 16), x = Math.cos(a) * 66, y = -6 + Math.sin(a) * 70; ctx.fillStyle = i % 2 ? '#ff9f1a' : '#ffcf33'; ell(ctx, x, y, 11, 11); ctx.fill(); } }
     // mouth
     ctx.save(); ctx.translate(0, -12);
     const open = Math.max(mouth, g.pose === 'scare' ? 0.6 : 0, g.pose === 'scared' ? 0.8 : 0);
@@ -408,7 +410,7 @@
     if (s.flash > 0) { ctx.fillStyle = `rgba(235,255,250,${s.flash * 0.85})`; ctx.fillRect(0, 0, SW, SH); }
     if (s.photo > 0) drawPhoto(ctx, s, t);
     drawLetter(ctx, s);
-    if (s.overlay) { ctx.save(); ctx.font = `800 120px ${FONT}`; const k = 0.7 + 0.3 * EASE.back(clamp(s.overlay.p * 5, 0, 1)); ctx.translate(SW / 2 - (land ? 0 : 30), land ? 190 : 560); ctx.scale(k, k); ctx.rotate(-0.05); outlinedText(ctx, [s.overlay.text], 0, 0, 120, s.overlay.color || '#fff'); ctx.restore(); }
+    if (s.overlay) { ctx.save(); ctx.font = `800 120px ${FONT}`; const fit = Math.min(1, (SW - 110) / (ctx.measureText(s.overlay.text).width + 30)); const k = (0.7 + 0.3 * EASE.back(clamp(s.overlay.p * 5, 0, 1))) * fit; ctx.translate(SW / 2 - (land ? 0 : 30), land ? 190 : 560); ctx.scale(k, k); ctx.rotate(-0.05); outlinedText(ctx, [s.overlay.text], 0, 0, 120, s.overlay.color || '#fff'); ctx.restore(); }
     drawHook(ctx, tl.hook, t);
     const cap = lines.filter(l => t >= l.start && t < l.end + 0.25).pop();
     if (cap) {

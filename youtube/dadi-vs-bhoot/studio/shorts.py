@@ -131,3 +131,5 @@ from episodes import EPISODES
 SHORTS.update(EPISODES)
 for _f in sorted(_glob.glob(_os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "batch_*.py"))):
     SHORTS.update(_il.import_module(_os.path.basename(_f)[:-3]).SHORTS)
+from instagram import REELS as _REELS
+SHORTS.update(_REELS)

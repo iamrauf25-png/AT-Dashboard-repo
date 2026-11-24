@@ -14,9 +14,8 @@ their Short id. Paste good viewer comments under **From viewers**.
 - Dadi (Kamla Devi), Chaman Bhoot, **Chandni Chudail** (from the old well; engaged to Chaman in Episode 2; voice CHANDNI; `ghost2` in scene.js)
 
 ## Next up
-- **Episode 3 (Sun 13 Dec): भूत की शादी**: the ghost wedding. Who gets scared at the wedding? Baraat at midnight, the wedding band runs away, Dadi gives the blessing, Chandni's family from the well. A sweet and funny ending.
+- **Episode 4 (Sun 20 Dec)**: married life begins. Chandni moves into the peepal tree; the first husband-wife fight (well vs tree, who sleeps on which branch); Dadi as the mediator. Chaman, now a "full ghost" with 1 human scared, gets overconfident.
 - भूत की परीक्षा 2: the Ghost Union sends an inspector ghost
-- Chandni moves into the peepal tree: the first married-life fight (the well vs the tree)
 - दिवाली/होली/New Year special (check the batch date)
 - Chaman's POV Short: a night in the life of a failed ghost
 - Silent sight-gag Shorts (no dialogue, music and SFX only), which work for non-Hindi viewers too
@@ -28,4 +27,4 @@ their Short id. Paste good viewer comments under **From viewers**.
 - d01 kiraya · d02 ulte pair · d03 photo · d04 boo · d05 multani mitti
 - d06 wifi · d07 diet · d08 gaana · d09 janmdin · d10 chudail moonchh · d11 ulta latka · d12 exam · d13 teen baje · d14 machis
 - d15 bijli · d16 sardi · d17 daant dard · d18 machchhar · d19 serial · d20 naukri · d21 reel
-- e01 bhoot ka license (long) · e02 chaman ka rishta (long) · compilation-01 (long, on hold)
+- e01 bhoot ka license (long) · e02 chaman ka rishta (long) · e03 bhoot ki shaadi (long; Chaman's record is now 1 human scared, the thief) · compilation-01 (long, on hold)

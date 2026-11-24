@@ -59,7 +59,7 @@ the latest long episode. **Pin a comment**: `अगली बार भूत �
 | 16 | Thu 10 Dec | `shorts/d20-naukri.mp4` | भूत को मिली Chowkidar की नौकरी 🔦 \| Dadi vs Bhoot | रात की ड्यूटी, ज़ीरो तनख़्वाह… और चौकीदार को ही अँधेरे से डर लगता है। |
 | 17 | Fri 11 Dec | `shorts/d13-teen-baje.mp4` | रात 3 बजे भूत सबसे ताक़तवर… 💪 \| Dadi vs Bhoot | कहते हैं रात 3 बजे भूत सबसे ताक़तवर होते हैं… दादी ने उस ताक़त का सही इस्तेमाल किया। |
 | 18 | Sat 12 Dec | `shorts/d17-daant-dard.mp4` | 200 साल पुराना दाँत दर्द 🦷 \| Dadi vs Bhoot | आधी रात कराहने की आवाज़… भूत नहीं, भूत का दाँत रो रहा था। |
-| 19 | **Sun 13 Dec, 11:00 am** | **LONG** TODO-EPISODE: *Episode 3 "भूत की शादी", made by the 26 Nov automation run* | | |
+| 19 | **Sun 13 Dec, 11:00 am** | **LONG** `long/e03-bhoot-ki-shaadi.mp4` | भूत की शादी! 💍 चमन और चाँदनी की आधी रात वाली शादी \| Dadi vs Bhoot Episode 3 | *(full description, chapters, thumbnail `thumb_e03.png`, subtitles: see UPLOAD-SHEET.md)* |
 | 19 | Sun 13 Dec | `shorts/d15-bijli.mp4` | गाँव की बिजली गई… इल्ज़ाम भूत पर! ⚡ \| Dadi vs Bhoot | पूरे गाँव की बिजली गई और सबको भूत पर शक था… दादी को नहीं। |
 | 20 | Mon 14 Dec | `shorts/d14-machis.mp4` | भूत ने दीया बुझाया… फिर ख़ुद डर गया 🕯️ \| Dadi vs Bhoot | अँधेरे से सबको डराने वाला भूत… माचिस ढूँढते-ढूँढते ख़ुद डर गया। |
 | 21 | Tue 15 Dec | `shorts/d21-reel.mp4` | भूत की Reel पर 0 Views 📱 \| Dadi vs Bhoot | रील में भूत दिखता ही नहीं… तो दादी ने उसके साथ रील बनाई। |
@@ -70,6 +70,6 @@ the latest long episode. **Pin a comment**: `अगली बार भूत �
 
 ## Automation (weeks 4+)
 Every **Thursday afternoon IST** a scheduled task writes and renders the next week: 7 new Shorts
-plus the Sunday **original** episode (starting with Episode 3 "भूत की शादी"). It follows the
+plus an **original** Sunday episode, always one week ahead (Episode 4 next). It follows the
 rules above, adds a "Week N" section here, pushes to branch `claude/wizardly-goodall-xpw90j`, and
 notifies your phone.

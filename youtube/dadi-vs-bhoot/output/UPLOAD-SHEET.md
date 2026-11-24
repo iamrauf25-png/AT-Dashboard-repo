@@ -116,6 +116,7 @@ Pin this comment yourself: `अगली बार भूत दादी को
 | --- | --- | --- | --- |
 | `long/e01-bhoot-ka-license.mp4` | 2:54 | `channel-art/thumb_e01.png` | `long/e01-bhoot-ka-license.hi.srt`, `.en.srt` |
 | `long/e02-chaman-ka-rishta.mp4` | 3:33 | `channel-art/thumb_e02.png` | `long/e02-chaman-ka-rishta.hi.srt`, `.en.srt` |
+| `long/e03-bhoot-ki-shaadi.mp4` | 4:27 | `channel-art/thumb_e03.png` | `long/e03-bhoot-ki-shaadi.hi.srt`, `.en.srt` |
 | `long/compilation-01.mp4` (**on hold**, see CALENDAR.md) | 4:21 | `channel-art/thumb_comp.png` | — (Hindi captions are burned in) |
 
 **When:** post Episode 1 on a weekend (for example **Saturday 7:30 pm IST**) once 3–4 Shorts are already up.
@@ -179,6 +180,32 @@ Lonely 200-year-old Chaman Bhoot gets an arranged-match "interview" with Chandni
 ```
 **Tags**: `dadi vs bhoot, दादी vs भूत, chudail cartoon, bhoot cartoon, hindi horror comedy, bhoot ki shaadi, hindi cartoon story, animated series hindi`
 Upload `thumb_e02.png` as the thumbnail and both subtitle files. End screen: subscribe + Episode 1.
+
+## Episode 3 · भूत की शादी (Sun 13 Dec, 11:00 am)
+
+**Title**
+```
+भूत की शादी! 💍 चमन और चाँदनी की आधी रात वाली शादी | Dadi vs Bhoot Episode 3
+```
+**Description**
+```
+आज पीपल के पेड़ पर शादी है! 💍👻 बारात में दो उल्लू, चार चमगादड़ और एक भटका हुआ मेंढक… कुएँ वाली सास के टेढ़े सवाल… और फिर वरमाला के बीच आ गया एक चोर! क्या 200 साल में पहली बार चमन भूत किसी इंसान को डरा पाएगा? 😱😂
+
+It's Chaman Bhoot and Chandni Chudail's midnight wedding, until a thief sneaks into Dadi's courtyard. Can Chaman finally scare his first human?
+
+0:00 शादी की तैयारी
+0:58 आधी रात की बारात
+1:38 कुएँ वाले ससुराल वाले
+2:23 वरमाला
+2:45 पहला इंसान
+3:36 विदाई
+
+आपकी शादी का सबसे मज़ेदार किस्सा कौन सा था? Comment करो 👇
+
+#DadiVsBhoot #bhootkishaadi #chudail #horrorcomedy #hindicartoon
+```
+**Tags**: `dadi vs bhoot, bhoot ki shaadi, भूत की शादी, chudail cartoon, hindi horror comedy, ghost wedding cartoon, hindi cartoon story, animated series hindi`
+Upload `thumb_e03.png` and both subtitle files (`long/e03-bhoot-ki-shaadi.hi.srt`, `.en.srt`). End screen: subscribe + Episode 2.
 
 ## Compilation 1 · सारे किस्से (on hold)
 
